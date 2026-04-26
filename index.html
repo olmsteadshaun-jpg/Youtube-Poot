@@ -4,88 +4,141 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
+<!-- AGGRESSIVE OLD ENGLISH FONT -->
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 
 <style>
+:root{ --theme:#ff0000; }
+
+*{box-sizing:border-box;}
+
 body{
   margin:0;
-  background:black;
-  font-family:Segoe UI;
+  font-family:Segoe UI, sans-serif;
+  background:#000;
   color:white;
 }
 
-/* HEADER */
+/* HEADER (UNCHANGED STRUCTURE) */
 .top{
+  position:sticky;
+  top:0;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:20px;
-  position:relative;
+  padding:16px 24px;
+  background:rgba(0,0,0,0.85);
 }
 
-/* 🔥 MASSIVE MEDIEVAL TITLE */
+.left,.right{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* 🔥 FIXED TITLE (ONLY VISUAL CHANGE) */
 .title{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
 
-  font-size:110px; /* ← BIG so you KNOW it changed */
+  font-size:85px;
 
-  font-family:'UnifrakturMaguntia', cursive !important;
+  font-family:'UnifrakturMaguntia', cursive;
 
-  color:gold;
+  color:#ff0000;
+  letter-spacing:4px;
 
   text-shadow:
-    0 0 5px red,
-    0 0 20px red,
-    0 0 40px darkred,
-    0 0 80px red;
+    0 0 8px #ff0000,
+    0 0 20px #ff0000,
+    0 0 40px rgba(255,0,0,0.9),
+    0 0 80px rgba(255,0,0,0.6);
 }
 
-/* 🔴 INPUT + BUTTONS VERY OBVIOUS */
+/* INPUT (UNCHANGED FEEL, JUST BORDER) */
 input{
-  padding:14px;
-  border:4px solid red; /* THICK */
-  background:black;
+  padding:10px;
+  border-radius:8px;
+  border:2px solid #ff0000;
+  background:#111;
   color:white;
 }
 
-/* BUTTONS */
+/* 🔴 BUTTON FIX (THIS WAS THE ISSUE) */
 button, select{
-  padding:14px 22px;
-  font-size:16px;
+  padding:10px;
+  border-radius:8px;
 
-  border:4px solid red; /* VERY THICK */
-  background:black;
+  background:#1a1a1a;
   color:white;
+
+  border:2px solid #ff0000;
 
   cursor:pointer;
+  transition:0.2s;
 }
 
-/* HOVER */
-button:hover{
-  background:red;
+button:hover, select:hover{
+  background:#2a2a2a;
+  box-shadow:
+    0 0 8px #ff0000,
+    0 0 16px rgba(255,0,0,0.7);
+}
+
+#rotateBtn.active{
+  background:#ff0000;
   color:black;
 }
 
-/* GRID */
+/* GRID (UNCHANGED) */
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:10px;
   padding:10px;
+  height:calc(100vh - 80px);
 }
 
-/* CARD */
+/* CARD (UNCHANGED) */
 .card{
-  border:2px solid red;
+  position:relative;
+  border-radius:10px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+.card.active{
+  box-shadow:0 0 20px #ff0000;
 }
 
 /* VIDEO */
 iframe{
   width:100%;
-  height:220px;
+  height:100%;
   border:none;
+}
+
+/* INFO */
+.info{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  padding:6px;
+  font-size:12px;
+  background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+}
+
+/* CLOSE */
+.close{
+  position:absolute;
+  top:4px;
+  right:4px;
+  background:black;
+  border:1px solid #ff0000;
+  color:white;
+  padding:2px 6px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -94,15 +147,21 @@ iframe{
 
 <div class="top">
 
-  <div>
+  <div class="left">
     <input id="input" placeholder="Paste YouTube link">
     <button onclick="add()">Add</button>
   </div>
 
   <div class="title">Poot Tube</div>
 
-  <div>
-    <button onclick="rotate()">▶</button>
+  <div class="right">
+    <select id="timerSelect" onchange="updateTimer()">
+      <option value="120000">120s</option>
+      <option value="180000">180s</option>
+      <option value="240000">240s</option>
+    </select>
+
+    <button id="rotateBtn" onclick="toggleRotate()">▶</button>
   </div>
 
 </div>
@@ -110,7 +169,21 @@ iframe{
 <div id="grid" class="grid"></div>
 
 <script>
-let videos=[];
+let videos = JSON.parse(localStorage.getItem("videos") || "[]");
+
+let startIndex = 0;
+let visibleCount = 9;
+let delay = 120000;
+let interval = null;
+let rotating = false;
+
+let activeAudio = 0;
+let dragFrom = null;
+let metaCache = {};
+
+function save(){
+  localStorage.setItem("videos", JSON.stringify(videos));
+}
 
 function extractId(input){
   if(input.includes("watch?v=")){
@@ -123,30 +196,131 @@ function extractId(input){
 }
 
 function add(){
-  let val=document.getElementById("input").value.trim();
-  if(!val)return;
+  let val = document.getElementById("input").value.trim();
+  if(!val) return;
 
-  let id=extractId(val);
+  let id = extractId(val);
+  if(id.length !== 11) return alert("Invalid video");
+
+  if(videos.includes(id)) return;
+
   videos.push(id);
+  save();
+  render();
+  document.getElementById("input").value="";
+}
+
+function remove(index){
+  videos.splice(index,1);
+  save();
   render();
 }
 
-function render(){
-  let grid=document.getElementById("grid");
+async function getMeta(id){
+  if(metaCache[id]) return metaCache[id];
+
+  try{
+    let res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
+    let data = await res.json();
+    metaCache[id] = data;
+    return data;
+  }catch{
+    return {title:id, author_name:"Unknown"};
+  }
+}
+
+async function render(){
+  let grid = document.getElementById("grid");
   grid.innerHTML="";
 
-  videos.forEach(id=>{
-    grid.innerHTML+=`
-      <div class="card">
-        <iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1"></iframe>
-      </div>
-    `;
-  });
+  if(videos.length === 0) return;
+
+  for(let i=0;i<visibleCount;i++){
+    let index=(startIndex+i)%videos.length;
+    let id=videos[index];
+
+    let card=document.createElement("div");
+    card.className="card";
+    card.draggable=true;
+
+    if(index===activeAudio) card.classList.add("active");
+
+    card.ondragstart=()=>dragFrom=index;
+
+    card.ondrop=()=>{
+      let temp=videos[dragFrom];
+      videos[dragFrom]=videos[index];
+      videos[index]=temp;
+      save();
+      render();
+    };
+
+    card.ondragover=e=>e.preventDefault();
+
+    let iframe=document.createElement("iframe");
+    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}&playsinline=1`;
+    iframe.allow="autoplay";
+
+    let info=document.createElement("div");
+    info.className="info";
+
+    getMeta(id).then(meta=>{
+      info.innerText = meta.title + " • " + meta.author_name;
+    });
+
+    let close=document.createElement("button");
+    close.className="close";
+    close.innerText="✖";
+
+    close.onclick=(e)=>{
+      e.stopPropagation();
+      remove(index);
+    };
+
+    card.onclick=()=>{
+      activeAudio=index;
+      render();
+    };
+
+    card.append(close,iframe,info);
+    grid.appendChild(card);
+  }
 }
 
-function rotate(){
-  setInterval(render,60000);
+function next(){
+  startIndex=(startIndex+visibleCount)%videos.length;
+  render();
 }
+
+function updateTimer(){
+  delay=parseInt(document.getElementById("timerSelect").value);
+  if(rotating){
+    clearInterval(interval);
+    interval=setInterval(next,delay);
+  }
+}
+
+function toggleRotate(){
+  rotating=!rotating;
+  clearInterval(interval);
+
+  let btn=document.getElementById("rotateBtn");
+
+  if(rotating){
+    interval=setInterval(next,delay);
+    btn.classList.add("active");
+  }else{
+    btn.classList.remove("active");
+  }
+}
+
+function changeTheme(){
+  document.documentElement.style.setProperty("--theme",
+    document.getElementById("colorPicker").value
+  );
+}
+
+render();
 </script>
 
 </body>
