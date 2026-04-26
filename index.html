@@ -70,7 +70,7 @@ iframe{
 <body>
 
 <div class="top">
-  <input id="input" placeholder="Paste YouTube link or ID">
+  <input id="input" placeholder="Paste YouTube VIDEO link or ID only">
   <button onclick="add()">Add</button>
 
   <select id="timerSelect" onchange="updateTimer()">
@@ -92,14 +92,15 @@ iframe{
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
 let current = 0;
-let rotating = false;
 let interval = null;
-let delay = 120000; // default 120s
+let delay = 120000;
+let rotating = false;
 
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
 }
 
+// extract ONLY valid video IDs
 function extractId(input){
   if(input.includes("watch?v=")){
     return input.split("v=")[1].split("&")[0];
@@ -110,11 +111,22 @@ function extractId(input){
   return input;
 }
 
+// validate ID length (YouTube IDs are 11 chars)
+function isValid(id){
+  return id.length === 11;
+}
+
 function add(){
   let val = document.getElementById("input").value.trim();
   if(!val) return;
 
   let id = extractId(val);
+
+  if(!isValid(id)){
+    alert("❌ Paste a valid YouTube VIDEO link (not channel)");
+    return;
+  }
+
   if(videos.includes(id)) return;
 
   videos.push(id);
@@ -170,11 +182,20 @@ function render(){
   });
 }
 
+// rotation step (guaranteed reload)
 function next(){
   if(videos.length === 0) return;
 
   current = (current + 1) % videos.length;
-  loadPlayer();
+
+  // force reload every time
+  let player = document.getElementById("player");
+  player.src = "";
+
+  setTimeout(()=>{
+    loadPlayer();
+  }, 100);
+
   render();
 }
 
@@ -188,12 +209,17 @@ function updateTimer(){
 }
 
 function toggleRotate(){
+  if(videos.length < 2){
+    alert("Add at least 2 videos to rotate");
+    return;
+  }
+
   rotating = !rotating;
+
+  clearInterval(interval);
 
   if(rotating){
     interval = setInterval(next, delay);
-  } else {
-    clearInterval(interval);
   }
 }
 
