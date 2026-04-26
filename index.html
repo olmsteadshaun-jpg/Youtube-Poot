@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PootiLurk</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+
+<body style="background:#0b1220;color:white;font-family:Segoe UI;padding:40px;">
+
+<h2>PootiLurk Login</h2>
+
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+
+<button onclick="signup()">Sign Up</button>
+<button onclick="login()">Login</button>
+
+<p id="status"></p>
+
+<script>
+const supabase = window.supabase.createClient(
+  "https://aujzhgdxnvcdxrjxkrlu.supabase.co",
+  "AIzaSyCcaFNAMwKlZvhlHYmsSblu5kAUVpKsA3U"
+);
+
+async function signup(){
+  let { error } = await supabase.auth.signUp({
+    email: email.value,
+    password: password.value
+  });
+  status.innerText = error ? error.message : "Check your email";
+}
+
+async function login(){
+  let { error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value
+  });
+  status.innerText = error ? error.message : "Logged in ✅";
+}
+</script>
+
+</body>
+</html>
