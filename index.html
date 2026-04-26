@@ -69,8 +69,8 @@ button, select{
 /* GRID */
 .grid{
   display:grid;
-  gap:10px;
-  padding:10px;
+  gap:16px;
+  padding:16px;
   height:calc(100vh - 80px);
 }
 
@@ -78,17 +78,12 @@ button, select{
 .grid.grid-6{ grid-template-columns:repeat(3,1fr); }
 .grid.grid-9{ grid-template-columns:repeat(3,1fr); }
 
-/* 🔥 NEW 12 GRID */
-.grid.grid-12{
-  grid-template-columns:repeat(4,1fr);
-  grid-template-rows:repeat(3,1fr);
-}
-
 /* CARD */
 .card{
   position:relative;
-  border-radius:8px;
+  border-radius:10px;
   overflow:hidden;
+  cursor:pointer;
   border:2px solid var(--borderColor, #ff2d2d);
   animation:borderGlow 3s infinite linear;
 }
@@ -99,6 +94,24 @@ button, select{
   100%{box-shadow:0 0 5px var(--borderColor);}
 }
 
+/* THUMB */
+.thumb{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* TITLE TEXT */
+.videoTitle{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  padding:8px;
+  background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);
+  font-size:14px;
+}
+
+/* IFRAME */
 iframe{
   width:100%;
   height:100%;
@@ -108,14 +121,13 @@ iframe{
 /* CLOSE */
 .close{
   position:absolute;
-  top:4px;
-  right:4px;
+  top:6px;
+  right:6px;
   background:black;
   color:white;
   border:none;
-  padding:2px 6px;
+  padding:4px 8px;
   cursor:pointer;
-  z-index:2;
 }
 </style>
 </head>
@@ -124,19 +136,21 @@ iframe{
 
 <div class="top">
 
+  <!-- LEFT -->
   <div>
     <input id="input" placeholder="Paste video link or ID">
     <button onclick="add()">Add</button>
   </div>
 
+  <!-- CENTER TITLE -->
   <div class="title">POOT TUBE</div>
 
+  <!-- RIGHT -->
   <div>
     <select id="gridSize" onchange="changeGrid()">
       <option value="4">4</option>
       <option value="6">6</option>
       <option value="9">9</option>
-      <option value="12">12</option> <!-- NEW -->
     </select>
 
     <select id="timerSelect" onchange="updateTimer()">
@@ -145,6 +159,7 @@ iframe{
       <option value="240000">240s</option>
     </select>
 
+    <!-- 🎨 COLOR PICKER -->
     <input type="color" id="colorPicker" value="#ff2d2d" onchange="changeColor()">
 
     <button id="rotateBtn" onclick="toggleRotate()">▶</button>
@@ -213,16 +228,32 @@ function render(){
     card.className="card";
     card.style.setProperty("--borderColor", borderColor);
 
-    let iframe=document.createElement("iframe");
-    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}`;
+    let thumb=document.createElement("img");
+    thumb.src=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    thumb.className="thumb";
+
+    let title=document.createElement("div");
+    title.className="videoTitle";
+    title.innerText="Video ID: "+id;
 
     let close=document.createElement("button");
     close.className="close";
     close.innerText="✖";
-    close.onclick=()=>remove(index);
+    close.onclick=(e)=>{
+      e.stopPropagation();
+      remove(index);
+    };
+
+    card.onclick=()=>{
+      card.innerHTML="";
+      let iframe=document.createElement("iframe");
+      iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}`;
+      card.appendChild(iframe);
+    };
 
     card.appendChild(close);
-    card.appendChild(iframe);
+    card.appendChild(thumb);
+    card.appendChild(title);
     grid.appendChild(card);
   }
 }
@@ -234,7 +265,7 @@ function changeGrid(){
 }
 
 function changeColor(){
-  borderColor = colorPicker.value;
+  borderColor = document.getElementById("colorPicker").value;
   render();
 }
 
