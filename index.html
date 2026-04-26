@@ -53,16 +53,6 @@ iframe{
 .controls{
   position:absolute;
   top:5px;
-  left:5px;
-  background:rgba(0,0,0,0.6);
-  padding:3px 6px;
-  font-size:12px;
-  border-radius:4px;
-}
-
-.buttons{
-  position:absolute;
-  top:5px;
   right:5px;
   display:flex;
   gap:5px;
@@ -72,8 +62,6 @@ iframe{
   padding:4px;
   font-size:12px;
 }
-.live{color:#22c55e;}
-.off{color:#ef4444;}
 </style>
 </head>
 
@@ -82,6 +70,7 @@ iframe{
 <div class="top">
   <input id="input" placeholder="Paste YouTube link or ID">
   <button onclick="add()">Add</button>
+  <button onclick="rotate()">Rotate ▶</button>
 </div>
 
 <div id="grid" class="grid"></div>
@@ -113,7 +102,7 @@ function add(){
   if(!val) return;
 
   let id = extractId(val);
-  videos.push({ id, muted:true, status:"checking" });
+  videos.push({ id, muted:true });
 
   save();
   render();
@@ -132,19 +121,6 @@ function toggleMute(index){
   render();
 }
 
-function checkStatus(id, iframe, index){
-  setTimeout(()=>{
-    try{
-      // If iframe loads something → assume live/working
-      videos[index].status = iframe.contentWindow.length ? "live" : "off";
-    }catch{
-      videos[index].status = "live";
-    }
-    save();
-    render();
-  }, 3000);
-}
-
 function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML = "";
@@ -153,16 +129,8 @@ function render(){
     let div = document.createElement("div");
     div.className = "player";
 
-    let statusLabel = v.status === "live"
-      ? `<span class="live">● LIVE</span>`
-      : v.status === "off"
-      ? `<span class="off">● OFFLINE</span>`
-      : "checking...";
-
     div.innerHTML = `
-      <div class="controls">${statusLabel}</div>
-
-      <div class="buttons">
+      <div class="controls">
         <button class="small" onclick="toggleMute(${i})">
           ${v.muted ? "🔇" : "🔊"}
         </button>
@@ -170,17 +138,20 @@ function render(){
       </div>
 
       <iframe
-        id="frame-${i}"
         src="https://www.youtube.com/embed/${v.id}?autoplay=1&mute=${v.muted ? 1 : 0}"
         allow="autoplay">
       </iframe>
     `;
 
     grid.appendChild(div);
-
-    let iframe = document.getElementById(`frame-${i}`);
-    checkStatus(v.id, iframe, i);
   });
+}
+
+// auto rotate (rebuild players every 60 sec)
+function rotate(){
+  setInterval(()=>{
+    render();
+  }, 60000);
 }
 
 render();
