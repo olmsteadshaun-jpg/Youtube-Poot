@@ -25,6 +25,7 @@ body{
   align-items:center;
   padding:14px 20px;
   border-bottom:1px solid #220000;
+  position:relative;
 }
 
 /* TITLE */
@@ -46,23 +47,53 @@ body{
 /* INPUT */
 input{
   background:#0a0a0a;
-  border:1px solid #300;
-  padding:10px;
+  border:2px solid #300;
+  padding:12px;
   color:white;
-  border-radius:6px;
+  border-radius:8px;
 }
 
-button,select{
-  background:#111;
-  border:1px solid #300;
+/* 🔥 BUTTONS UPGRADED */
+button, select{
+  background:#0a0a0a;
+  border:2px solid #400;
   color:white;
-  padding:10px;
+
+  padding:12px 18px;
+  font-size:14px;
+  border-radius:8px;
+
   cursor:pointer;
+  transition:0.2s;
 }
 
-button:hover{
-  background:#222;
-  border-color:var(--red);
+/* HOVER */
+button:hover, select:hover{
+  border-color:#ff1a1a;
+  box-shadow:
+    0 0 6px #ff1a1a,
+    0 0 12px rgba(255,0,0,0.6);
+  background:#111;
+}
+
+/* ADD BUTTON POP */
+.left button{
+  border-color:#ff1a1a;
+  font-weight:600;
+}
+
+/* ROTATE BUTTON */
+#rotateBtn{
+  padding:12px 22px;
+  font-size:16px;
+  border:2px solid #ff1a1a;
+}
+
+/* ACTIVE ROTATE */
+#rotateBtn.active{
+  background:#ff1a1a;
+  color:black;
+  box-shadow:0 0 12px #ff1a1a;
 }
 
 /* GRID */
@@ -73,20 +104,19 @@ button:hover{
   padding:12px;
 }
 
-/* VIDEO CARD */
+/* CARD */
 .card{
   position:relative;
   border:1px solid #400;
   border-radius:8px;
   overflow:hidden;
   background:#000;
-
   transition:0.2s;
 }
 
 .card:hover{
-  border-color:var(--red);
-  box-shadow:0 0 12px var(--red);
+  border-color:#ff1a1a;
+  box-shadow:0 0 12px #ff1a1a;
 }
 
 /* VIDEO */
@@ -96,7 +126,7 @@ iframe{
   border:none;
 }
 
-/* TITLE BAR */
+/* INFO */
 .info{
   padding:8px;
   font-size:13px;
@@ -104,7 +134,7 @@ iframe{
   border-top:1px solid #200;
 }
 
-/* CLOSE BUTTON */
+/* CLOSE */
 .close{
   position:absolute;
   top:6px;
@@ -121,15 +151,21 @@ iframe{
 
 <div class="top">
 
-  <div>
+  <div class="left">
     <input id="input" placeholder="Paste YouTube link">
     <button onclick="add()">Add</button>
   </div>
 
   <div class="title">Poot Tube</div>
 
-  <div>
-    <button onclick="rotate()">Rotate</button>
+  <div class="right">
+    <select id="timerSelect">
+      <option>120s</option>
+      <option>180s</option>
+      <option>240s</option>
+    </select>
+
+    <button id="rotateBtn" onclick="rotate()">▶</button>
   </div>
 
 </div>
@@ -174,7 +210,7 @@ function render(){
     div.className="card";
 
     div.innerHTML = `
-      <button class="close" onclick="remove(${i})">X</button>
+      <button class="close" onclick="remove(${i})">✖</button>
 
       <iframe
         src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}">
@@ -187,8 +223,10 @@ function render(){
   });
 }
 
-/* SIMPLE ROTATION */
+/* ROTATE */
 function rotate(){
+  document.getElementById("rotateBtn").classList.toggle("active");
+
   setInterval(()=>{
     render();
   },60000);
