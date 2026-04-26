@@ -26,42 +26,33 @@ input{
 
 button, select{
   padding:10px;
-  background:#2563eb;
-  color:white;
   border:none;
   cursor:pointer;
+  color:white;
 }
 
-.container{
-  display:flex;
-  height:calc(100vh - 60px);
+#rotateBtn{
+  background:#2563eb; /* OFF = blue */
 }
 
-.sidebar{
-  width:260px;
-  background:#020617;
-  overflow-y:auto;
+#rotateBtn.active{
+  background:#22c55e; /* ON = green */
+}
+
+select{
+  background:#2563eb;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap:10px;
   padding:10px;
-}
-
-.item{
-  background:#111827;
-  padding:8px;
-  margin-bottom:5px;
-  cursor:pointer;
-}
-
-.active{
-  outline:2px solid #22c55e;
-}
-
-.main{
-  flex:1;
 }
 
 iframe{
   width:100%;
-  height:100%;
+  height:200px;
   border:none;
 }
 </style>
@@ -70,7 +61,7 @@ iframe{
 <body>
 
 <div class="top">
-  <input id="input" placeholder="Paste YouTube VIDEO link or ID only">
+  <input id="input" placeholder="Paste YouTube VIDEO link or ID">
   <button onclick="add()">Add</button>
 
   <select id="timerSelect" onchange="updateTimer()">
@@ -79,19 +70,17 @@ iframe{
     <option value="240000">240s</option>
   </select>
 
-  <button onclick="toggleRotate()">Rotate ▶</button>
+  <button id="rotateBtn" onclick="toggleRotate()">Rotate ▶</button>
 </div>
 
-<div class="container">
-  <div id="list" class="sidebar"></div>
-  <div class="main">
-    <iframe id="player"></iframe>
-  </div>
-</div>
+<div id="grid" class="grid"></div>
 
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
-let current = 0;
+
+let startIndex = 0;
+let visibleCount = 4;
+
 let interval = null;
 let delay = 120000;
 let rotating = false;
@@ -100,7 +89,6 @@ function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
 }
 
-// extract ONLY valid video IDs
 function extractId(input){
   if(input.includes("watch?v=")){
     return input.split("v=")[1].split("&")[0];
@@ -111,7 +99,6 @@ function extractId(input){
   return input;
 }
 
-// validate ID length (YouTube IDs are 11 chars)
 function isValid(id){
   return id.length === 11;
 }
@@ -123,7 +110,7 @@ function add(){
   let id = extractId(val);
 
   if(!isValid(id)){
-    alert("❌ Paste a valid YouTube VIDEO link (not channel)");
+    alert("Paste a valid video link");
     return;
   }
 
@@ -136,66 +123,29 @@ function add(){
   document.getElementById("input").value = "";
 }
 
-function remove(index){
-  videos.splice(index,1);
-  save();
-  render();
-}
+function render(){
+  let grid = document.getElementById("grid");
+  grid.innerHTML = "";
 
-function play(index){
-  current = index;
-  loadPlayer();
-  render();
-}
-
-function loadPlayer(){
   if(videos.length === 0) return;
 
-  let id = videos[current];
+  for(let i = 0; i < visibleCount; i++){
+    let index = (startIndex + i) % videos.length;
+    let id = videos[index];
 
-  document.getElementById("player").src =
-    "https://www.youtube.com/embed/" + id +
-    "?autoplay=1&mute=1&loop=1&playlist=" + id;
+    let iframe = document.createElement("iframe");
+    iframe.src =
+      "https://www.youtube.com/embed/" + id +
+      "?autoplay=1&mute=1&loop=1&playlist=" + id;
+
+    grid.appendChild(iframe);
+  }
 }
 
-function render(){
-  let list = document.getElementById("list");
-  list.innerHTML = "";
-
-  videos.forEach((v,i)=>{
-    let d = document.createElement("div");
-    d.className = "item " + (i === current ? "active" : "");
-    d.innerText = v;
-
-    d.onclick = ()=>play(i);
-
-    let del = document.createElement("span");
-    del.innerText = " ❌";
-    del.style.float = "right";
-    del.onclick = (e)=>{
-      e.stopPropagation();
-      remove(i);
-    };
-
-    d.appendChild(del);
-    list.appendChild(d);
-  });
-}
-
-// rotation step (guaranteed reload)
 function next(){
   if(videos.length === 0) return;
 
-  current = (current + 1) % videos.length;
-
-  // force reload every time
-  let player = document.getElementById("player");
-  player.src = "";
-
-  setTimeout(()=>{
-    loadPlayer();
-  }, 100);
-
+  startIndex = (startIndex + visibleCount) % videos.length;
   render();
 }
 
@@ -209,8 +159,10 @@ function updateTimer(){
 }
 
 function toggleRotate(){
-  if(videos.length < 2){
-    alert("Add at least 2 videos to rotate");
+  let btn = document.getElementById("rotateBtn");
+
+  if(videos.length <= visibleCount){
+    alert("Add more videos to rotate");
     return;
   }
 
@@ -220,13 +172,12 @@ function toggleRotate(){
 
   if(rotating){
     interval = setInterval(next, delay);
+    btn.classList.add("active"); // turn green
+  } else {
+    btn.classList.remove("active"); // back to blue
   }
 }
 
-// init
-if(videos.length > 0){
-  loadPlayer();
-}
 render();
 </script>
 
