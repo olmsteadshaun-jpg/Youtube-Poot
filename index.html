@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
-<!-- Old English font (loads automatically) -->
+<!-- FORCE LOAD FONT -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
 
 <style>
@@ -36,17 +38,17 @@ body{
   align-items:center;
 }
 
-/* 🔥 OLD ENGLISH TITLE (FORCED) */
+/* 🔥 FONT LOCKED IN */
 .title{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  font-size:58px;
+  font-size:60px;
 
-  font-family:'UnifrakturCook', serif !important;
+  font-family: "UnifrakturCook", serif !important;
 
-  letter-spacing:2px;
   color:var(--theme);
+  letter-spacing:2px;
 
   text-shadow:
     0 0 10px var(--theme),
@@ -142,7 +144,6 @@ iframe{
     <button onclick="add()">Add</button>
   </div>
 
-  <!-- TITLE -->
   <div class="title">POOT TUBE</div>
 
   <div class="right">
