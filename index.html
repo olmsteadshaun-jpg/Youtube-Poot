@@ -12,11 +12,11 @@
 body{
   margin:0;
   font-family:Segoe UI, sans-serif;
-  background: radial-gradient(circle at top,#0f172a,#020617);
+  background:#000000; /* PURE BLACK */
   color:white;
 }
 
-/* HEADER LAYOUT */
+/* HEADER */
 .top{
   position:sticky;
   top:0;
@@ -25,7 +25,7 @@ body{
   align-items:center;
   padding:14px 20px;
   backdrop-filter: blur(14px);
-  background:rgba(2,6,23,0.85);
+  background:rgba(0,0,0,0.85);
 }
 
 /* LEFT */
@@ -48,14 +48,19 @@ body{
   left:50%;
   transform:translateX(-50%);
   font-family:'UnifrakturCook', cursive;
-  font-size:42px;
+  font-size:56px; /* BIGGER */
   color:#ff2d2d;
+
   animation: glow 2s infinite alternate;
 }
 
 @keyframes glow{
-  from{ text-shadow:0 0 5px #ff2d2d; }
-  to{ text-shadow:0 0 25px #ff0000,0 0 50px #ff0000; }
+  from{
+    text-shadow:0 0 10px #ff2d2d, 0 0 20px #ff2d2d;
+  }
+  to{
+    text-shadow:0 0 25px #ff0000, 0 0 50px #ff0000, 0 0 80px #ff0000;
+  }
 }
 
 /* INPUT */
@@ -115,7 +120,7 @@ iframe{
   border:none;
 }
 
-/* CLOSE */
+/* CLOSE BUTTON */
 .close{
   position:absolute;
   top:6px;
@@ -213,6 +218,8 @@ function remove(index){
 function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML="";
+
+  if(videos.length === 0) return;
 
   for(let i=0;i<visibleCount;i++){
     let index=(startIndex+i)%videos.length;
