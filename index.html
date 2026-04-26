@@ -12,7 +12,6 @@ body{
   font-family:Segoe UI, sans-serif;
   background: radial-gradient(circle at top,#0f172a,#020617);
   color:white;
-  overflow-x:hidden;
 }
 
 /* HEADER */
@@ -38,22 +37,17 @@ body{
   font-weight:900;
   letter-spacing:2px;
   color:#ff2d2d;
-
   animation: neon 2s infinite alternate;
 }
 
 @keyframes neon{
-  from{
-    text-shadow:0 0 5px #ff2d2d,0 0 10px #ff2d2d;
-  }
-  to{
-    text-shadow:0 0 10px #ff0000,0 0 30px #ff0000,0 0 50px #ff0000;
-  }
+  from{ text-shadow:0 0 5px #ff2d2d; }
+  to{ text-shadow:0 0 20px #ff0000,0 0 40px #ff0000; }
 }
 
 /* INPUT */
 input{
-  padding:10px 12px;
+  padding:10px;
   border-radius:8px;
   border:none;
   flex:1;
@@ -63,7 +57,7 @@ input{
 
 /* BUTTONS */
 button, select{
-  padding:10px 12px;
+  padding:10px;
   border-radius:8px;
   border:none;
   cursor:pointer;
@@ -73,11 +67,9 @@ button, select{
 }
 
 button:hover{
-  transform:translateY(-1px);
   background:#374151;
 }
 
-/* ROTATE BUTTON */
 #rotateBtn{
   background:#2563eb;
 }
@@ -85,47 +77,61 @@ button:hover{
 #rotateBtn.active{
   background:#22c55e;
   box-shadow:0 0 15px rgba(34,197,94,0.7);
-  animation:pulse 1.5s infinite;
-}
-
-@keyframes pulse{
-  0%{box-shadow:0 0 5px rgba(34,197,94,0.4);}
-  50%{box-shadow:0 0 20px rgba(34,197,94,1);}
-  100%{box-shadow:0 0 5px rgba(34,197,94,0.4);}
 }
 
 /* GRID */
 .grid{
   display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap:20px;
-  padding:20px;
+  gap:16px;
+  padding:16px;
+  height:calc(100vh - 80px);
+}
+
+/* DYNAMIC GRID */
+.grid.grid-4{
+  grid-template-columns:repeat(2,1fr);
+  grid-auto-rows:1fr;
+}
+.grid.grid-6{
+  grid-template-columns:repeat(3,1fr);
+  grid-auto-rows:1fr;
+}
+.grid.grid-9{
+  grid-template-columns:repeat(3,1fr);
+  grid-auto-rows:1fr;
 }
 
 /* CARD */
 .card{
-  border-radius:12px;
+  position:relative;
+  border-radius:10px;
   overflow:hidden;
   background:linear-gradient(145deg,#3b0000,#120000);
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.7),
-    inset 0 0 15px rgba(255,0,0,0.2);
-
-  transition:0.3s;
-}
-
-.card:hover{
-  transform:scale(1.03);
-  box-shadow:
-    0 15px 50px rgba(0,0,0,0.9),
-    inset 0 0 25px rgba(255,0,0,0.4);
+  box-shadow:0 10px 30px rgba(0,0,0,0.7);
 }
 
 /* VIDEO */
 iframe{
   width:100%;
-  height:200px;
+  height:100%;
   border:none;
+}
+
+/* CLOSE BUTTON */
+.close{
+  position:absolute;
+  top:6px;
+  right:6px;
+  background:rgba(0,0,0,0.7);
+  border:none;
+  color:white;
+  padding:4px 8px;
+  cursor:pointer;
+  border-radius:6px;
+}
+
+.close:hover{
+  background:#ef4444;
 }
 </style>
 </head>
@@ -153,7 +159,7 @@ iframe{
   <div class="title">POOT TUBE</div>
 </div>
 
-<div id="grid" class="grid"></div>
+<div id="grid" class="grid grid-4"></div>
 
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
@@ -203,6 +209,12 @@ function add(){
   document.getElementById("input").value = "";
 }
 
+function remove(index){
+  videos.splice(index,1);
+  save();
+  render();
+}
+
 function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML = "";
@@ -221,7 +233,14 @@ function render(){
       "https://www.youtube.com/embed/" + id +
       "?autoplay=1&mute=1&loop=1&playlist=" + id;
 
+    let closeBtn = document.createElement("button");
+    closeBtn.className = "close";
+    closeBtn.innerText = "✖";
+    closeBtn.onclick = () => remove(index);
+
+    card.appendChild(closeBtn);
     card.appendChild(iframe);
+
     grid.appendChild(card);
   }
 }
@@ -235,6 +254,10 @@ function next(){
 
 function changeGrid(){
   visibleCount = parseInt(document.getElementById("gridSize").value);
+
+  let grid = document.getElementById("grid");
+  grid.className = "grid grid-" + visibleCount;
+
   render();
 }
 
