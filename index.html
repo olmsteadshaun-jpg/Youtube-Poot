@@ -7,9 +7,11 @@
 <style>
 :root{ --theme:#ff2d2d; }
 
+*{box-sizing:border-box;}
+
 body{
   margin:0;
-  font-family:Segoe UI;
+  font-family:Segoe UI, sans-serif;
   background: radial-gradient(circle at top,#0a0a0a,#000);
   color:white;
 }
@@ -22,12 +24,13 @@ body{
   justify-content:space-between;
   align-items:center;
   padding:16px 24px;
-  background:rgba(0,0,0,0.7);
+  background:rgba(0,0,0,0.8);
 }
 
 .left,.right{
   display:flex;
   gap:10px;
+  align-items:center;
 }
 
 /* TITLE */
@@ -55,13 +58,22 @@ input{
 }
 
 /* BUTTONS */
-button,select{
+button, select{
   padding:10px;
   border-radius:8px;
   border:none;
   background:#1a1a1a;
   color:white;
   cursor:pointer;
+}
+
+button:hover, select:hover{
+  background:#2a2a2a;
+}
+
+#rotateBtn.active{
+  background:var(--theme);
+  box-shadow:0 0 12px var(--theme);
 }
 
 /* GRID */
@@ -73,6 +85,7 @@ button,select{
   height:calc(100vh - 80px);
 }
 
+/* CARD */
 .card{
   position:relative;
   border-radius:10px;
@@ -80,16 +93,22 @@ button,select{
   border:1px solid rgba(255,255,255,0.1);
 }
 
-.card.active{
-  box-shadow:0 0 20px var(--theme);
+.card:hover{
+  box-shadow:0 0 15px var(--theme);
 }
 
+.card.active{
+  box-shadow:0 0 25px var(--theme);
+}
+
+/* VIDEO */
 iframe{
   width:100%;
   height:100%;
   border:none;
 }
 
+/* INFO */
 .info{
   position:absolute;
   bottom:0;
@@ -99,6 +118,7 @@ iframe{
   background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);
 }
 
+/* CLOSE */
 .close{
   position:absolute;
   top:4px;
@@ -121,6 +141,7 @@ iframe{
     <button onclick="add()">Add</button>
   </div>
 
+  <!-- ✅ THIS IS YOUR TITLE -->
   <div class="title">POOT TUBE</div>
 
   <div class="right">
@@ -141,40 +162,70 @@ iframe{
 
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
-let startIndex=0, visibleCount=9, delay=120000, interval=null, rotating=false;
-let activeAudio=0, dragFrom=null, metaCache={};
 
-function save(){ localStorage.setItem("videos", JSON.stringify(videos)); }
+let startIndex = 0;
+let visibleCount = 9;
+let delay = 120000;
+let interval = null;
+let rotating = false;
+
+let activeAudio = 0;
+let dragFrom = null;
+let metaCache = {};
+
+function save(){
+  localStorage.setItem("videos", JSON.stringify(videos));
+}
 
 function extractId(input){
-  if(input.includes("watch?v=")) return input.split("v=")[1].split("&")[0];
-  if(input.includes("youtu.be/")) return input.split("youtu.be/")[1];
+  if(input.includes("watch?v=")){
+    return input.split("v=")[1].split("&")[0];
+  }
+  if(input.includes("youtu.be/")){
+    return input.split("youtu.be/")[1];
+  }
   return input;
 }
 
 function add(){
-  let val=input.value.trim();
+  let val = document.getElementById("input").value.trim();
   if(!val) return;
-  let id=extractId(val);
-  if(id.length!==11) return alert("Invalid video");
+
+  let id = extractId(val);
+  if(id.length !== 11) return alert("Invalid video");
+
   if(videos.includes(id)) return;
-  videos.push(id); save(); render(); input.value="";
+
+  videos.push(id);
+  save();
+  render();
+  document.getElementById("input").value="";
 }
 
-function remove(i){ videos.splice(i,1); save(); render(); }
+function remove(index){
+  videos.splice(index,1);
+  save();
+  render();
+}
 
 async function getMeta(id){
   if(metaCache[id]) return metaCache[id];
+
   try{
-    let r=await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
-    let d=await r.json(); metaCache[id]=d; return d;
-  }catch{return {title:id,author_name:"Unknown"};}
+    let res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
+    let data = await res.json();
+    metaCache[id] = data;
+    return data;
+  }catch{
+    return {title:id, author_name:"Unknown"};
+  }
 }
 
 async function render(){
-  let grid=document.getElementById("grid");
+  let grid = document.getElementById("grid");
   grid.innerHTML="";
-  if(!videos.length) return;
+
+  if(videos.length === 0) return;
 
   for(let i=0;i<visibleCount;i++){
     let index=(startIndex+i)%videos.length;
@@ -183,50 +234,86 @@ async function render(){
     let card=document.createElement("div");
     card.className="card";
     card.draggable=true;
+
     if(index===activeAudio) card.classList.add("active");
 
     card.ondragstart=()=>dragFrom=index;
+
     card.ondrop=()=>{
-      [videos[dragFrom],videos[index]]=[videos[index],videos[dragFrom]];
-      save(); render();
+      let temp=videos[dragFrom];
+      videos[dragFrom]=videos[index];
+      videos[index]=temp;
+      save();
+      render();
     };
+
     card.ondragover=e=>e.preventDefault();
 
     let iframe=document.createElement("iframe");
-    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}`;
+    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}&playsinline=1`;
     iframe.allow="autoplay";
 
     let info=document.createElement("div");
     info.className="info";
-    getMeta(id).then(m=>info.innerText=m.title+" • "+m.author_name);
+
+    getMeta(id).then(meta=>{
+      info.innerText = meta.title + " • " + meta.author_name;
+    });
 
     let close=document.createElement("button");
     close.className="close";
     close.innerText="✖";
-    close.onclick=(e)=>{e.stopPropagation(); remove(index);};
 
-    card.onclick=()=>{activeAudio=index; render();};
+    close.onclick=(e)=>{
+      e.stopPropagation();
+      remove(index);
+    };
 
-    card.append(close,iframe,info);
+    card.onclick=()=>{
+      activeAudio=index;
+      render();
+    };
+
+    card.appendChild(close);
+    card.appendChild(iframe);
+    card.appendChild(info);
+
     grid.appendChild(card);
   }
 }
 
-function next(){ startIndex=(startIndex+visibleCount)%videos.length; render(); }
+function next(){
+  startIndex=(startIndex+visibleCount)%videos.length;
+  render();
+}
 
 function updateTimer(){
-  delay=parseInt(timerSelect.value);
-  if(rotating){ clearInterval(interval); interval=setInterval(next,delay); }
+  delay=parseInt(document.getElementById("timerSelect").value);
+
+  if(rotating){
+    clearInterval(interval);
+    interval=setInterval(next,delay);
+  }
 }
 
 function toggleRotate(){
-  rotating=!rotating; clearInterval(interval);
-  if(rotating){ interval=setInterval(next,delay); rotateBtn.classList.add("active"); }
-  else rotateBtn.classList.remove("active");
+  rotating=!rotating;
+  clearInterval(interval);
+
+  let btn = document.getElementById("rotateBtn");
+
+  if(rotating){
+    interval=setInterval(next,delay);
+    btn.classList.add("active");
+  }else{
+    btn.classList.remove("active");
+  }
 }
 
 function changeTheme(){
-  document.documentElement.style.setProperty("--theme", colorPicker.value);
+  document.documentElement.style.setProperty("--theme",
+    document.getElementById("colorPicker").value
+  );
 }
 
 render();
