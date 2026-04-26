@@ -94,7 +94,7 @@ button, select{
   box-shadow:0 0 25px var(--theme);
 }
 
-/* INFO BAR */
+/* INFO */
 .info{
   position:absolute;
   bottom:0;
@@ -213,28 +213,35 @@ async function getMeta(id){
   }
 }
 
+/* ⚡ OPTIMIZED RENDER */
 async function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML="";
 
+  if(videos.length === 0) return;
+
+  let batch = [];
+
   for(let i=0;i<visibleCount;i++){
     let index=(startIndex+i)%videos.length;
     let id=videos[index];
-
-    let meta = await getMeta(id);
 
     let card=document.createElement("div");
     card.className="card";
     if(index===activeAudio) card.classList.add("active");
 
     let iframe=document.createElement("iframe");
-    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}&playsinline=1`;
 
+    iframe.loading="lazy";
+    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}&playsinline=1`;
     iframe.allow="autoplay";
 
     let info=document.createElement("div");
     info.className="info";
-    info.innerText = meta.title + " • " + meta.author_name;
+
+    getMeta(id).then(meta=>{
+      info.innerText = meta.title + " • " + meta.author_name;
+    });
 
     let close=document.createElement("button");
     close.className="close";
@@ -252,18 +259,34 @@ async function render(){
     card.appendChild(close);
     card.appendChild(iframe);
     card.appendChild(info);
-    grid.appendChild(card);
+
+    batch.push(card);
   }
+
+  batch.forEach((card,i)=>{
+    setTimeout(()=>{
+      grid.appendChild(card);
+    }, i * 80);
+  });
+}
+
+/* 🔥 PRELOAD NEXT */
+function preloadNext(){
+  let link = document.createElement("link");
+  link.rel="preconnect";
+  link.href="https://www.youtube.com";
+  document.head.appendChild(link);
+}
+
+function next(){
+  preloadNext();
+  startIndex=(startIndex+visibleCount)%videos.length;
+  render();
 }
 
 function changeTheme(){
   let color = colorPicker.value;
   document.documentElement.style.setProperty("--theme", color);
-}
-
-function next(){
-  startIndex=(startIndex+visibleCount)%videos.length;
-  render();
 }
 
 function updateTimer(){
