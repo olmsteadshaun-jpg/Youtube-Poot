@@ -24,7 +24,7 @@ input{
   flex:1;
 }
 
-button{
+button, select{
   padding:10px;
   background:#2563eb;
   color:white;
@@ -72,6 +72,13 @@ iframe{
 <div class="top">
   <input id="input" placeholder="Paste YouTube link or ID">
   <button onclick="add()">Add</button>
+
+  <select id="timerSelect" onchange="updateTimer()">
+    <option value="120000">120s</option>
+    <option value="180000">180s</option>
+    <option value="240000">240s</option>
+  </select>
+
   <button onclick="toggleRotate()">Rotate ▶</button>
 </div>
 
@@ -87,6 +94,7 @@ let videos = JSON.parse(localStorage.getItem("videos") || "[]");
 let current = 0;
 let rotating = false;
 let interval = null;
+let delay = 120000; // default 120s
 
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
@@ -107,7 +115,6 @@ function add(){
   if(!val) return;
 
   let id = extractId(val);
-
   if(videos.includes(id)) return;
 
   videos.push(id);
@@ -171,11 +178,20 @@ function next(){
   render();
 }
 
+function updateTimer(){
+  delay = parseInt(document.getElementById("timerSelect").value);
+
+  if(rotating){
+    clearInterval(interval);
+    interval = setInterval(next, delay);
+  }
+}
+
 function toggleRotate(){
   rotating = !rotating;
 
   if(rotating){
-    interval = setInterval(next, 30000); // 30 sec
+    interval = setInterval(next, delay);
   } else {
     clearInterval(interval);
   }
