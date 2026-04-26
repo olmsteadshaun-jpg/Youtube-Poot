@@ -54,14 +54,14 @@ button{
   <input id="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
 
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Login</button>
+  <button id="signupBtn">Sign Up</button>
+  <button id="loginBtn">Login</button>
 
   <div id="msg"></div>
 </div>
 
-<!-- SUPABASE (simple version, no module issues) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- SUPABASE CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <script>
 const supabase = window.supabase.createClient(
@@ -71,12 +71,13 @@ const supabase = window.supabase.createClient(
 
 const msg = document.getElementById("msg");
 
-function show(text, isError = false){
-  msg.style.color = isError ? "#ef4444" : "#22c55e";
+function show(text, error=false){
+  msg.style.color = error ? "#ef4444" : "#22c55e";
   msg.innerText = text;
 }
 
-async function signup(){
+// BUTTON EVENTS (no onclick anymore)
+document.getElementById("signupBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
@@ -87,9 +88,9 @@ async function signup(){
   } else {
     show("Signup successful ✅");
   }
-}
+});
 
-async function login(){
+document.getElementById("loginBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
@@ -100,7 +101,7 @@ async function login(){
   } else {
     show("Login successful 🎉");
   }
-}
+});
 </script>
 
 </body>
