@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
-<!-- Old English font -->
+<!-- Old English font (loads automatically) -->
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
 
 <style>
@@ -19,7 +19,7 @@ body{
   color:white;
 }
 
-/* HEADER (BACK TO ORIGINAL STYLE) */
+/* HEADER */
 .top{
   position:sticky;
   top:0;
@@ -36,13 +36,15 @@ body{
   align-items:center;
 }
 
-/* 🔥 ONLY CHANGE = FONT */
+/* 🔥 OLD ENGLISH TITLE (FORCED) */
 .title{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  font-size:56px;
-  font-family:'UnifrakturCook', serif;
+  font-size:58px;
+
+  font-family:'UnifrakturCook', serif !important;
+
   letter-spacing:2px;
   color:var(--theme);
 
@@ -140,6 +142,7 @@ iframe{
     <button onclick="add()">Add</button>
   </div>
 
+  <!-- TITLE -->
   <div class="title">POOT TUBE</div>
 
   <div class="right">
@@ -236,6 +239,7 @@ async function render(){
     if(index===activeAudio) card.classList.add("active");
 
     card.ondragstart=()=>dragFrom=index;
+
     card.ondrop=()=>{
       let temp=videos[dragFrom];
       videos[dragFrom]=videos[index];
@@ -243,6 +247,7 @@ async function render(){
       save();
       render();
     };
+
     card.ondragover=e=>e.preventDefault();
 
     let iframe=document.createElement("iframe");
