@@ -1,15 +1,16 @@
-:root{
-  --theme:#ff2d2d;
-  --bg:#000000;
-  --panel:rgba(20,20,20,0.7);
-}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PootTubeLive</title>
 
-*{box-sizing:border-box;}
+<style>
+:root{ --theme:#ff2d2d; }
 
 body{
   margin:0;
-  font-family:Inter, Segoe UI, sans-serif;
-  background: radial-gradient(circle at top, #0a0a0a, #000);
+  font-family:Segoe UI;
+  background: radial-gradient(circle at top,#0a0a0a,#000);
   color:white;
 }
 
@@ -21,132 +22,215 @@ body{
   justify-content:space-between;
   align-items:center;
   padding:16px 24px;
-  backdrop-filter: blur(12px);
-  background:rgba(0,0,0,0.6);
-  border-bottom:1px solid rgba(255,255,255,0.05);
+  background:rgba(0,0,0,0.7);
 }
 
-/* LEFT / RIGHT */
-.left, .right{
+.left,.right{
   display:flex;
   gap:10px;
-  align-items:center;
 }
 
-/* LOGO */
+/* TITLE */
 .title{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  font-size:40px;
+  font-size:52px;
   font-weight:900;
-  letter-spacing:3px;
+  letter-spacing:4px;
   color:var(--theme);
-  text-transform:uppercase;
-
   text-shadow:
     0 0 10px var(--theme),
     0 0 25px var(--theme),
-    0 0 50px rgba(255,0,0,0.4);
+    0 0 50px rgba(255,0,0,0.5);
 }
 
 /* INPUT */
 input{
-  padding:10px 14px;
-  border-radius:10px;
+  padding:10px;
+  border-radius:8px;
   border:none;
   background:#111;
   color:white;
-  width:260px;
 }
 
 /* BUTTONS */
-button, select{
-  padding:10px 12px;
-  border-radius:10px;
+button,select{
+  padding:10px;
+  border-radius:8px;
   border:none;
   background:#1a1a1a;
   color:white;
   cursor:pointer;
-  transition:0.2s;
-}
-
-button:hover, select:hover{
-  background:#2a2a2a;
-}
-
-/* ROTATE ACTIVE */
-#rotateBtn.active{
-  background:var(--theme);
-  box-shadow:0 0 12px var(--theme);
 }
 
 /* GRID */
 .grid{
   display:grid;
-  gap:14px;
-  padding:16px;
-  height:calc(100vh - 90px);
-}
-
-.grid.grid-9{
   grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  padding:10px;
+  height:calc(100vh - 80px);
 }
 
-/* CARD */
 .card{
   position:relative;
-  border-radius:12px;
+  border-radius:10px;
   overflow:hidden;
-  background:#000;
-  border:1px solid rgba(255,255,255,0.08);
-  transition:0.25s;
+  border:1px solid rgba(255,255,255,0.1);
 }
 
-.card:hover{
-  transform:translateY(-4px);
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.7),
-    0 0 20px var(--theme);
-}
-
-/* ACTIVE STREAM */
 .card.active{
-  box-shadow:
-    0 0 25px var(--theme),
-    0 0 50px rgba(255,0,0,0.5);
+  box-shadow:0 0 20px var(--theme);
 }
 
-/* VIDEO */
 iframe{
   width:100%;
   height:100%;
   border:none;
 }
 
-/* INFO BAR */
 .info{
   position:absolute;
   bottom:0;
   width:100%;
-  padding:8px;
+  padding:6px;
   font-size:12px;
-  background:linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+  background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);
 }
 
-/* CLOSE BUTTON */
 .close{
   position:absolute;
-  top:6px;
-  right:6px;
-  background:rgba(0,0,0,0.7);
-  color:white;
+  top:4px;
+  right:4px;
+  background:black;
   border:none;
-  padding:4px 8px;
-  border-radius:6px;
+  color:white;
+  padding:2px 6px;
   cursor:pointer;
 }
+</style>
+</head>
 
-.close:hover{
-  background:var(--theme);
+<body>
+
+<div class="top">
+
+  <div class="left">
+    <input id="input" placeholder="Paste YouTube link">
+    <button onclick="add()">Add</button>
+  </div>
+
+  <div class="title">POOT TUBE</div>
+
+  <div class="right">
+    <select id="timerSelect" onchange="updateTimer()">
+      <option value="120000">120s</option>
+      <option value="180000">180s</option>
+      <option value="240000">240s</option>
+    </select>
+
+    <input type="color" id="colorPicker" value="#ff2d2d" onchange="changeTheme()">
+
+    <button id="rotateBtn" onclick="toggleRotate()">▶</button>
+  </div>
+
+</div>
+
+<div id="grid" class="grid"></div>
+
+<script>
+let videos = JSON.parse(localStorage.getItem("videos") || "[]");
+let startIndex=0, visibleCount=9, delay=120000, interval=null, rotating=false;
+let activeAudio=0, dragFrom=null, metaCache={};
+
+function save(){ localStorage.setItem("videos", JSON.stringify(videos)); }
+
+function extractId(input){
+  if(input.includes("watch?v=")) return input.split("v=")[1].split("&")[0];
+  if(input.includes("youtu.be/")) return input.split("youtu.be/")[1];
+  return input;
 }
+
+function add(){
+  let val=input.value.trim();
+  if(!val) return;
+  let id=extractId(val);
+  if(id.length!==11) return alert("Invalid video");
+  if(videos.includes(id)) return;
+  videos.push(id); save(); render(); input.value="";
+}
+
+function remove(i){ videos.splice(i,1); save(); render(); }
+
+async function getMeta(id){
+  if(metaCache[id]) return metaCache[id];
+  try{
+    let r=await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
+    let d=await r.json(); metaCache[id]=d; return d;
+  }catch{return {title:id,author_name:"Unknown"};}
+}
+
+async function render(){
+  let grid=document.getElementById("grid");
+  grid.innerHTML="";
+  if(!videos.length) return;
+
+  for(let i=0;i<visibleCount;i++){
+    let index=(startIndex+i)%videos.length;
+    let id=videos[index];
+
+    let card=document.createElement("div");
+    card.className="card";
+    card.draggable=true;
+    if(index===activeAudio) card.classList.add("active");
+
+    card.ondragstart=()=>dragFrom=index;
+    card.ondrop=()=>{
+      [videos[dragFrom],videos[index]]=[videos[index],videos[dragFrom]];
+      save(); render();
+    };
+    card.ondragover=e=>e.preventDefault();
+
+    let iframe=document.createElement("iframe");
+    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}`;
+    iframe.allow="autoplay";
+
+    let info=document.createElement("div");
+    info.className="info";
+    getMeta(id).then(m=>info.innerText=m.title+" • "+m.author_name);
+
+    let close=document.createElement("button");
+    close.className="close";
+    close.innerText="✖";
+    close.onclick=(e)=>{e.stopPropagation(); remove(index);};
+
+    card.onclick=()=>{activeAudio=index; render();};
+
+    card.append(close,iframe,info);
+    grid.appendChild(card);
+  }
+}
+
+function next(){ startIndex=(startIndex+visibleCount)%videos.length; render(); }
+
+function updateTimer(){
+  delay=parseInt(timerSelect.value);
+  if(rotating){ clearInterval(interval); interval=setInterval(next,delay); }
+}
+
+function toggleRotate(){
+  rotating=!rotating; clearInterval(interval);
+  if(rotating){ interval=setInterval(next,delay); rotateBtn.classList.add("active"); }
+  else rotateBtn.classList.remove("active");
+}
+
+function changeTheme(){
+  document.documentElement.style.setProperty("--theme", colorPicker.value);
+}
+
+render();
+</script>
+
+</body>
+</html>
