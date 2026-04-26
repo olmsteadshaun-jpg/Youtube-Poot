@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
-<!-- HEAVIER OLD ENGLISH FONT -->
+<!-- STRONG OLD ENGLISH FONT -->
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 
 <style>
@@ -36,23 +36,24 @@ body{
   align-items:center;
 }
 
-/* 🔥 AGGRESSIVE OLD ENGLISH TITLE */
+/* 🔥 REAL OLD ENGLISH TITLE */
 .title{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  font-size:64px;
+  font-size:72px;
 
   font-family:'UnifrakturMaguntia', cursive;
 
-  letter-spacing:3px;
   color:#ff2d2d;
+  letter-spacing:4px;
 
   text-shadow:
     0 0 5px #ff2d2d,
     0 0 15px #ff0000,
-    0 0 30px rgba(255,0,0,0.8),
-    0 0 60px rgba(255,0,0,0.6);
+    0 0 30px rgba(255,0,0,0.9),
+    0 0 60px rgba(255,0,0,0.7),
+    0 0 100px rgba(255,0,0,0.5);
 }
 
 /* INPUT */
@@ -110,6 +111,7 @@ iframe{
   border:none;
 }
 
+/* INFO */
 .info{
   position:absolute;
   bottom:0;
@@ -119,6 +121,7 @@ iframe{
   background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);
 }
 
+/* CLOSE */
 .close{
   position:absolute;
   top:4px;
@@ -141,7 +144,8 @@ iframe{
     <button onclick="add()">Add</button>
   </div>
 
-  <div class="title">POOT TUBE</div>
+  <!-- 🔥 TITLE -->
+  <div class="title">Poot Tube</div>
 
   <div class="right">
     <select id="timerSelect" onchange="updateTimer()">
