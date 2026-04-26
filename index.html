@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
-<!-- OLD ENGLISH FONT -->
+<!-- FORCE OLD ENGLISH FONT -->
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
 
 <style>
@@ -40,11 +40,14 @@ body{
   gap:10px;
 }
 
-/* 🔥 OLD ENGLISH TITLE */
+/* 🔥 FORCED OLD ENGLISH TITLE */
 .title{
   text-align:center;
-  font-size:58px;
-  font-family:'UnifrakturCook', cursive;
+  font-size:60px;
+
+  /* 👇 THIS IS THE FIX */
+  font-family: "UnifrakturCook", "Old English Text MT", serif !important;
+
   letter-spacing:2px;
   color:var(--theme);
 
@@ -99,22 +102,16 @@ button:hover, select:hover{
   border:1px solid rgba(255,255,255,0.1);
 }
 
-.card:hover{
-  box-shadow:0 0 15px var(--theme);
-}
-
 .card.active{
   box-shadow:0 0 25px var(--theme);
 }
 
-/* VIDEO */
 iframe{
   width:100%;
   height:100%;
   border:none;
 }
 
-/* INFO */
 .info{
   position:absolute;
   bottom:0;
@@ -124,7 +121,6 @@ iframe{
   background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);
 }
 
-/* CLOSE */
 .close{
   position:absolute;
   top:4px;
@@ -147,7 +143,7 @@ iframe{
     <button onclick="add()">Add</button>
   </div>
 
-  <!-- OLD ENGLISH TITLE -->
+  <!-- 👇 THIS WILL NOW BE OLD ENGLISH -->
   <div class="title">POOT TUBE</div>
 
   <div class="right">
@@ -244,7 +240,6 @@ async function render(){
     if(index===activeAudio) card.classList.add("active");
 
     card.ondragstart=()=>dragFrom=index;
-
     card.ondrop=()=>{
       let temp=videos[dragFrom];
       videos[dragFrom]=videos[index];
@@ -252,7 +247,6 @@ async function render(){
       save();
       render();
     };
-
     card.ondragover=e=>e.preventDefault();
 
     let iframe=document.createElement("iframe");
@@ -269,21 +263,11 @@ async function render(){
     let close=document.createElement("button");
     close.className="close";
     close.innerText="✖";
+    close.onclick=(e)=>{e.stopPropagation(); remove(index);};
 
-    close.onclick=(e)=>{
-      e.stopPropagation();
-      remove(index);
-    };
+    card.onclick=()=>{activeAudio=index; render();};
 
-    card.onclick=()=>{
-      activeAudio=index;
-      render();
-    };
-
-    card.appendChild(close);
-    card.appendChild(iframe);
-    card.appendChild(info);
-
+    card.append(close,iframe,info);
     grid.appendChild(card);
   }
 }
@@ -295,7 +279,6 @@ function next(){
 
 function updateTimer(){
   delay=parseInt(document.getElementById("timerSelect").value);
-
   if(rotating){
     clearInterval(interval);
     interval=setInterval(next,delay);
@@ -305,8 +288,7 @@ function updateTimer(){
 function toggleRotate(){
   rotating=!rotating;
   clearInterval(interval);
-
-  let btn = document.getElementById("rotateBtn");
+  let btn=document.getElementById("rotateBtn");
 
   if(rotating){
     interval=setInterval(next,delay);
