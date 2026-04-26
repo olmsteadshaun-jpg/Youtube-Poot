@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>PootTube</title>
 
+<!-- Old English font -->
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box;}
 
@@ -18,14 +21,12 @@ body{
 .top{
   position:sticky;
   top:0;
-  z-index:10;
   backdrop-filter: blur(14px);
   background:rgba(2,6,23,0.85);
   padding:14px;
   display:flex;
   gap:10px;
   align-items:center;
-  border-bottom:1px solid rgba(255,255,255,0.05);
 }
 
 /* TITLE */
@@ -33,16 +34,16 @@ body{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  font-size:26px;
-  font-weight:900;
-  letter-spacing:2px;
+  font-family:'UnifrakturCook', cursive;
+  font-size:42px;
   color:#ff2d2d;
-  animation: neon 2s infinite alternate;
+  letter-spacing:3px;
+  animation: glow 2s infinite alternate;
 }
 
-@keyframes neon{
+@keyframes glow{
   from{ text-shadow:0 0 5px #ff2d2d; }
-  to{ text-shadow:0 0 20px #ff0000,0 0 40px #ff0000; }
+  to{ text-shadow:0 0 25px #ff0000,0 0 50px #ff0000; }
 }
 
 /* INPUT */
@@ -63,20 +64,11 @@ button, select{
   cursor:pointer;
   color:white;
   background:#1f2937;
-  transition:0.25s;
 }
 
-button:hover{
-  background:#374151;
-}
-
-#rotateBtn{
-  background:#2563eb;
-}
-
+/* ROTATE */
 #rotateBtn.active{
   background:#22c55e;
-  box-shadow:0 0 15px rgba(34,197,94,0.7);
 }
 
 /* GRID */
@@ -87,51 +79,42 @@ button:hover{
   height:calc(100vh - 80px);
 }
 
-/* DYNAMIC GRID */
-.grid.grid-4{
-  grid-template-columns:repeat(2,1fr);
-  grid-auto-rows:1fr;
-}
-.grid.grid-6{
-  grid-template-columns:repeat(3,1fr);
-  grid-auto-rows:1fr;
-}
-.grid.grid-9{
-  grid-template-columns:repeat(3,1fr);
-  grid-auto-rows:1fr;
-}
+.grid.grid-4{ grid-template-columns:repeat(2,1fr); }
+.grid.grid-6{ grid-template-columns:repeat(3,1fr); }
+.grid.grid-9{ grid-template-columns:repeat(3,1fr); }
 
 /* CARD */
 .card{
   position:relative;
   border-radius:10px;
   overflow:hidden;
-  background:linear-gradient(145deg,#3b0000,#120000);
-  box-shadow:0 10px 30px rgba(0,0,0,0.7);
+  cursor:grab;
+  border:3px solid var(--borderColor, red);
+  animation:borderGlow 3s infinite linear;
 }
 
-/* VIDEO */
+@keyframes borderGlow{
+  0%{box-shadow:0 0 5px var(--borderColor);}
+  50%{box-shadow:0 0 20px var(--borderColor);}
+  100%{box-shadow:0 0 5px var(--borderColor);}
+}
+
 iframe{
   width:100%;
   height:100%;
   border:none;
 }
 
-/* CLOSE BUTTON */
+/* CLOSE */
 .close{
   position:absolute;
   top:6px;
   right:6px;
-  background:rgba(0,0,0,0.7);
+  background:black;
   border:none;
   color:white;
   padding:4px 8px;
   cursor:pointer;
-  border-radius:6px;
-}
-
-.close:hover{
-  background:#ef4444;
 }
 </style>
 </head>
@@ -139,7 +122,7 @@ iframe{
 <body>
 
 <div class="top">
-  <input id="input" placeholder="Paste YouTube video link or ID">
+  <input id="input" placeholder="Paste video link or ID">
   <button onclick="add()">Add</button>
 
   <select id="gridSize" onchange="changeGrid()">
@@ -154,6 +137,8 @@ iframe{
     <option value="240000">240s</option>
   </select>
 
+  <input type="color" id="colorPicker" value="#ff0000" onchange="changeColor()">
+
   <button id="rotateBtn" onclick="toggleRotate()">Rotate ▶</button>
 
   <div class="title">POOT TUBE</div>
@@ -166,10 +151,10 @@ let videos = JSON.parse(localStorage.getItem("videos") || "[]");
 
 let startIndex = 0;
 let visibleCount = 4;
-
-let interval = null;
 let delay = 120000;
+let interval = null;
 let rotating = false;
+let borderColor = "#ff0000";
 
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
@@ -185,28 +170,19 @@ function extractId(input){
   return input;
 }
 
-function isValid(id){
-  return id.length === 11;
-}
-
 function add(){
-  let val = document.getElementById("input").value.trim();
+  let val = input.value.trim();
   if(!val) return;
 
   let id = extractId(val);
-
-  if(!isValid(id)){
-    alert("Paste a valid video link");
-    return;
-  }
+  if(id.length !== 11) return alert("Invalid video");
 
   if(videos.includes(id)) return;
 
   videos.push(id);
   save();
   render();
-
-  document.getElementById("input").value = "";
+  input.value = "";
 }
 
 function remove(index){
@@ -219,51 +195,68 @@ function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  if(videos.length === 0) return;
-
-  for(let i = 0; i < visibleCount; i++){
-    let index = (startIndex + i) % videos.length;
+  for(let i=0;i<visibleCount;i++){
+    let index = (startIndex+i)%videos.length;
     let id = videos[index];
 
     let card = document.createElement("div");
-    card.className = "card";
+    card.className="card";
+    card.draggable=true;
+    card.style.setProperty("--borderColor", borderColor);
 
-    let iframe = document.createElement("iframe");
-    iframe.src =
-      "https://www.youtube.com/embed/" + id +
-      "?autoplay=1&mute=1&loop=1&playlist=" + id;
+    card.dataset.index=index;
 
-    let closeBtn = document.createElement("button");
-    closeBtn.className = "close";
-    closeBtn.innerText = "✖";
-    closeBtn.onclick = () => remove(index);
+    let iframe=document.createElement("iframe");
+    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}`;
 
-    card.appendChild(closeBtn);
+    let close=document.createElement("button");
+    close.className="close";
+    close.innerText="✖";
+    close.onclick=()=>remove(index);
+
+    card.appendChild(close);
     card.appendChild(iframe);
-
     grid.appendChild(card);
+
+    // DRAG EVENTS
+    card.ondragstart=e=>{
+      e.dataTransfer.setData("index", index);
+    };
+
+    card.ondragover=e=>e.preventDefault();
+
+    card.ondrop=e=>{
+      let from = e.dataTransfer.getData("index");
+      let to = index;
+
+      let temp = videos[from];
+      videos[from] = videos[to];
+      videos[to] = temp;
+
+      save();
+      render();
+    };
   }
 }
 
-function next(){
-  if(videos.length === 0) return;
+function changeGrid(){
+  visibleCount = parseInt(gridSize.value);
+  grid.className="grid grid-"+visibleCount;
+  render();
+}
 
+function changeColor(){
+  borderColor = document.getElementById("colorPicker").value;
+  render();
+}
+
+function next(){
   startIndex = (startIndex + visibleCount) % videos.length;
   render();
 }
 
-function changeGrid(){
-  visibleCount = parseInt(document.getElementById("gridSize").value);
-
-  let grid = document.getElementById("grid");
-  grid.className = "grid grid-" + visibleCount;
-
-  render();
-}
-
 function updateTimer(){
-  delay = parseInt(document.getElementById("timerSelect").value);
-
+  delay = parseInt(timerSelect.value);
   if(rotating){
     clearInterval(interval);
     interval = setInterval(next, delay);
@@ -271,22 +264,14 @@ function updateTimer(){
 }
 
 function toggleRotate(){
-  let btn = document.getElementById("rotateBtn");
-
-  if(videos.length <= visibleCount){
-    alert("Add more videos to rotate");
-    return;
-  }
-
-  rotating = !rotating;
-
+  rotating=!rotating;
   clearInterval(interval);
 
   if(rotating){
-    interval = setInterval(next, delay);
-    btn.classList.add("active");
-  } else {
-    btn.classList.remove("active");
+    interval=setInterval(next,delay);
+    rotateBtn.classList.add("active");
+  }else{
+    rotateBtn.classList.remove("active");
   }
 }
 
