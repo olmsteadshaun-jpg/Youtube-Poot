@@ -3,45 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <title>PootiLurk</title>
+
+<style>
+body {
+  margin:0;
+  font-family:Segoe UI;
+  background:#0b1220;
+  color:white;
+}
+
+.container {
+  display:flex;
+  height:100vh;
+}
+
+.sidebar {
+  width:300px;
+  background:#020617;
+  padding:15px;
+}
+
+.main {
+  flex:1;
+}
+
+input {
+  width:100%;
+  padding:8px;
+  margin-bottom:10px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  margin-bottom:10px;
+  cursor:pointer;
+}
+
+.channel {
+  background:#111827;
+  padding:8px;
+  margin-bottom:5px;
+  cursor:pointer;
+}
+
+iframe {
+  width:100%;
+  height:100%;
+  border:none;
+}
+</style>
 </head>
 
-<body style="background:#0b1220;color:white;font-family:sans-serif;text-align:center;padding-top:100px;">
+<body>
 
-<h2>PootiLurk</h2>
+<div class="container">
 
-<input id="email" placeholder="Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+  <div class="sidebar">
+    <h3>PootiLurk</h3>
 
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
+    <input id="channelInput" placeholder="Paste Channel ID">
+    <button onclick="addChannel()">Add Channel</button>
 
-<p id="msg"></p>
+    <div id="channels"></div>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <div class="main">
+    <iframe id="player"></iframe>
+  </div>
+
+</div>
 
 <script>
-const client = window.supabase.createClient(
-  "https://aujzhgdxnvcdxrjxkrlu.supabase.co",
-  "sb_publishable_0X6rYnfD2-NNEy1I5YB6IQ_WxVHfMlF"
-);
-
-function show(t){ document.getElementById("msg").innerText = t; }
-
-async function signup(){
-  const { error } = await client.auth.signUp({
-    email: email.value,
-    password: password.value
-  });
-  show(error ? error.message : "Signup OK");
+function getChannels(){
+  return JSON.parse(localStorage.getItem("channels") || "[]");
 }
 
-async function login(){
-  const { error } = await client.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  });
-  show(error ? error.message : "Login OK 🎉");
+function saveChannels(ch){
+  localStorage.setItem("channels", JSON.stringify(ch));
 }
+
+function addChannel(){
+  let val = document.getElementById("channelInput").value;
+  if(!val) return;
+
+  let ch = getChannels();
+  ch.push(val);
+  saveChannels(ch);
+
+  document.getElementById("channelInput").value = "";
+  loadChannels();
+}
+
+function loadChannels(){
+  let div = document.getElementById("channels");
+  let ch = getChannels();
+
+  div.innerHTML = "";
+
+  ch.forEach(id=>{
+    let d = document.createElement("div");
+    d.className = "channel";
+    d.innerText = id;
+    d.onclick = ()=>play(id);
+    div.appendChild(d);
+  });
+}
+
+function play(id){
+  document.getElementById("player").src =
+    "https://www.youtube.com/embed/live_stream?channel=" + id;
+}
+
+loadChannels();
 </script>
 
 </body>
