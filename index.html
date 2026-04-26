@@ -4,40 +4,116 @@
 <meta charset="UTF-8">
 <title>PootiLurk</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI;
+  background:#0b1220;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box{
+  background:#020617;
+  padding:30px;
+  border-radius:12px;
+  width:340px;
+  text-align:center;
+}
+input{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border:none;
+  border-radius:6px;
+}
+button{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  background:#2563eb;
+  border:none;
+  border-radius:6px;
+  color:white;
+  cursor:pointer;
+}
+#status{
+  margin-top:10px;
+  font-size:14px;
+  color:#22c55e;
+}
+#error{
+  margin-top:10px;
+  font-size:14px;
+  color:#ef4444;
+}
+</style>
 </head>
 
-<body style="background:#0b1220;color:white;font-family:Segoe UI;padding:40px;">
+<body>
 
-<h2>PootiLurk Login</h2>
+<div class="box">
+  <h2>PootiLurk</h2>
 
-<input id="email" placeholder="Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
+  <button onclick="signup()">Sign Up</button>
+  <button onclick="login()">Login</button>
 
-<p id="status"></p>
+  <div id="status"></div>
+  <div id="error"></div>
+</div>
 
 <script>
 const supabase = window.supabase.createClient(
   "https://aujzhgdxnvcdxrjxkrlu.supabase.co",
-  "AIzaSyCcaFNAMwKlZvhlHYmsSblu5kAUVpKsA3U"
+  "PASTE_YOUR_ANON_KEY"
 );
 
+function setStatus(msg){
+  document.getElementById("status").innerText = msg;
+  document.getElementById("error").innerText = "";
+}
+
+function setError(msg){
+  document.getElementById("error").innerText = msg;
+  document.getElementById("status").innerText = "";
+}
+
 async function signup(){
-  let { error } = await supabase.auth.signUp({
-    email: email.value,
-    password: password.value
+  const emailVal = document.getElementById("email").value;
+  const passVal = document.getElementById("password").value;
+
+  const { error } = await supabase.auth.signUp({
+    email: emailVal,
+    password: passVal
   });
-  status.innerText = error ? error.message : "Check your email";
+
+  if(error){
+    setError("Signup: " + error.message);
+  } else {
+    setStatus("Signup successful ✅");
+  }
 }
 
 async function login(){
-  let { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
+  const emailVal = document.getElementById("email").value;
+  const passVal = document.getElementById("password").value;
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: emailVal,
+    password: passVal
   });
-  status.innerText = error ? error.message : "Logged in ✅";
+
+  if(error){
+    setError("Login: " + error.message);
+  } else {
+    setStatus("Logged in successfully 🎉");
+  }
 }
 </script>
 
