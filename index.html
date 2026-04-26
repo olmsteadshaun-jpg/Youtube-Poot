@@ -1,158 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>PootTube</title>
-
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
-
-<style>
-:root{
-  --theme:#ff2d2d;
-}
-
-*{box-sizing:border-box;}
-
-body{
-  margin:0;
-  font-family:Segoe UI, sans-serif;
-  background:#000;
-  color:white;
-}
-
-/* HEADER */
-.top{
-  position:sticky;
-  top:0;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px 20px;
-  background:rgba(0,0,0,0.9);
-}
-
-/* TITLE */
-.title{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  font-family:'UnifrakturCook', cursive;
-  font-size:56px;
-  color:var(--theme);
-  animation: glow 2s infinite alternate;
-}
-
-@keyframes glow{
-  from{ text-shadow:0 0 10px var(--theme);}
-  to{ text-shadow:0 0 40px var(--theme),0 0 80px var(--theme);}
-}
-
-/* INPUT */
-input{
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  background:#111;
-  color:white;
-}
-
-/* BUTTONS */
-button, select{
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  background:#1f2937;
-  color:white;
-  cursor:pointer;
-}
-
-#rotateBtn.active{
-  background:var(--theme);
-  box-shadow:0 0 15px var(--theme);
-}
-
-/* GRID */
-.grid{
-  display:grid;
-  gap:10px;
-  padding:10px;
-  height:calc(100vh - 80px);
-}
-
-.grid.grid-9{ grid-template-columns:repeat(3,1fr); }
-
-/* CARD */
-.card{
-  position:relative;
-  border-radius:8px;
-  overflow:hidden;
-  border:2px solid var(--theme);
-  cursor:pointer;
-}
-
-.card.active{
-  box-shadow:0 0 25px var(--theme);
-}
-
-/* INFO */
-.info{
-  position:absolute;
-  bottom:0;
-  width:100%;
-  padding:6px;
-  background:rgba(0,0,0,0.7);
-  font-size:12px;
-}
-
-/* IFRAME */
-iframe{
-  width:100%;
-  height:100%;
-  border:none;
-}
-
-/* CLOSE */
-.close{
-  position:absolute;
-  top:4px;
-  right:4px;
-  background:black;
-  color:white;
-  border:none;
-  padding:2px 6px;
-  cursor:pointer;
-  z-index:2;
-}
-</style>
-</head>
-
-<body>
-
-<div class="top">
-
-  <div>
-    <input id="input" placeholder="Paste video link or ID">
-    <button onclick="add()">Add</button>
-  </div>
-
-  <div class="title">POOT TUBE</div>
-
-  <div>
-    <select id="timerSelect" onchange="updateTimer()">
-      <option value="120000">120s</option>
-      <option value="180000">180s</option>
-      <option value="240000">240s</option>
-    </select>
-
-    <input type="color" id="colorPicker" value="#ff2d2d" onchange="changeTheme()">
-
-    <button id="rotateBtn" onclick="toggleRotate()">▶</button>
-  </div>
-
-</div>
-
-<div id="grid" class="grid grid-9"></div>
-
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
 
@@ -164,6 +9,8 @@ let rotating = false;
 
 let activeAudio = 0;
 let metaCache = {};
+
+let dragFrom = null;
 
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
@@ -213,7 +60,7 @@ async function getMeta(id){
   }
 }
 
-/* ⚡ OPTIMIZED RENDER */
+/* 🔥 DRAG + OPTIMIZED RENDER */
 async function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML="";
@@ -228,10 +75,28 @@ async function render(){
 
     let card=document.createElement("div");
     card.className="card";
+    card.draggable = true;
+    card.dataset.index = index;
+
     if(index===activeAudio) card.classList.add("active");
 
-    let iframe=document.createElement("iframe");
+    /* 🎯 DRAG EVENTS */
+    card.ondragstart = () => {
+      dragFrom = index;
+    };
 
+    card.ondragover = (e) => e.preventDefault();
+
+    card.ondrop = () => {
+      let temp = videos[dragFrom];
+      videos[dragFrom] = videos[index];
+      videos[index] = temp;
+
+      save();
+      render();
+    };
+
+    let iframe=document.createElement("iframe");
     iframe.loading="lazy";
     iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}&playsinline=1`;
     iframe.allow="autoplay";
@@ -270,7 +135,7 @@ async function render(){
   });
 }
 
-/* 🔥 PRELOAD NEXT */
+/* PRELOAD */
 function preloadNext(){
   let link = document.createElement("link");
   link.rel="preconnect";
@@ -311,6 +176,3 @@ function toggleRotate(){
 
 render();
 </script>
-
-</body>
-</html>
