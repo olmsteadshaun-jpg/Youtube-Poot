@@ -39,10 +39,7 @@ button{
   color:white;
   cursor:pointer;
 }
-#msg{
-  margin-top:10px;
-  font-size:14px;
-}
+#msg{margin-top:10px;}
 </style>
 </head>
 
@@ -60,11 +57,11 @@ button{
   <div id="msg"></div>
 </div>
 
-<!-- SUPABASE CDN -->
+<!-- ONLY ONE SCRIPT -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <script>
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
   "https://aujzhgdxnvcdxrjxkrlu.supabase.co",
   "sb_publishable_0X6rYnfD2-NNEy1I5YB6IQ_WxVHfMlF"
 );
@@ -76,12 +73,11 @@ function show(text, error=false){
   msg.innerText = text;
 }
 
-// BUTTON EVENTS (no onclick anymore)
 document.getElementById("signupBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { error } = await supabaseClient.auth.signUp({ email, password });
 
   if(error){
     show(error.message, true);
@@ -94,7 +90,7 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   if(error){
     show(error.message, true);
