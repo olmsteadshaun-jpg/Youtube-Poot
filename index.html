@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
+<!-- OLD ENGLISH FONT -->
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+
 <style>
 :root{ --theme:#ff2d2d; }
 
@@ -16,7 +19,7 @@ body{
   color:white;
 }
 
-/* HEADER (FIXED GRID LAYOUT) */
+/* HEADER */
 .top{
   display:grid;
   grid-template-columns:1fr auto 1fr;
@@ -37,17 +40,18 @@ body{
   gap:10px;
 }
 
-/* TITLE (GUARANTEED VISIBLE) */
+/* 🔥 OLD ENGLISH TITLE */
 .title{
   text-align:center;
-  font-size:52px;
-  font-weight:900;
-  letter-spacing:4px;
+  font-size:58px;
+  font-family:'UnifrakturCook', cursive;
+  letter-spacing:2px;
   color:var(--theme);
+
   text-shadow:
     0 0 10px var(--theme),
     0 0 25px var(--theme),
-    0 0 50px rgba(255,0,0,0.5);
+    0 0 50px rgba(255,0,0,0.6);
 }
 
 /* INPUT */
@@ -143,6 +147,7 @@ iframe{
     <button onclick="add()">Add</button>
   </div>
 
+  <!-- OLD ENGLISH TITLE -->
   <div class="title">POOT TUBE</div>
 
   <div class="right">
