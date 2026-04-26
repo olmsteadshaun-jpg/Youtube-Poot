@@ -1,3 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PootTubeLive</title>
+
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --theme:#ff2d2d;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:Inter, Segoe UI, sans-serif;
+  background: radial-gradient(circle at top, #0a0a0a, #000);
+  color:white;
+}
+
+/* HEADER */
+.top{
+  position:sticky;
+  top:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 24px;
+  backdrop-filter: blur(12px);
+  background:rgba(0,0,0,0.6);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.left,.right{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* TITLE */
+.title{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:40px;
+  font-weight:900;
+  letter-spacing:3px;
+  color:var(--theme);
+  text-shadow:
+    0 0 10px var(--theme),
+    0 0 25px var(--theme),
+    0 0 50px rgba(255,0,0,0.4);
+}
+
+/* INPUT */
+input{
+  padding:10px 14px;
+  border-radius:10px;
+  border:none;
+  background:#111;
+  color:white;
+}
+
+/* BUTTONS */
+button, select{
+  padding:10px 12px;
+  border-radius:10px;
+  border:none;
+  background:#1a1a1a;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover, select:hover{
+  background:#2a2a2a;
+}
+
+#rotateBtn.active{
+  background:var(--theme);
+  box-shadow:0 0 12px var(--theme);
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  gap:14px;
+  padding:16px;
+  height:calc(100vh - 90px);
+}
+
+.grid.grid-9{
+  grid-template-columns:repeat(3,1fr);
+}
+
+/* CARD */
+.card{
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 0 20px var(--theme);
+}
+
+.card.active{
+  box-shadow:0 0 25px var(--theme);
+}
+
+/* VIDEO */
+iframe{
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+/* INFO */
+.info{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  padding:8px;
+  font-size:12px;
+  background:linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+}
+
+/* CLOSE */
+.close{
+  position:absolute;
+  top:6px;
+  right:6px;
+  background:rgba(0,0,0,0.7);
+  border:none;
+  color:white;
+  padding:4px 8px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+
+  <div class="left">
+    <input id="input" placeholder="Paste YouTube link">
+    <button onclick="add()">Add</button>
+  </div>
+
+  <div class="title">PootTubeLive</div>
+
+  <div class="right">
+    <select id="timerSelect" onchange="updateTimer()">
+      <option value="120000">120s</option>
+      <option value="180000">180s</option>
+      <option value="240000">240s</option>
+    </select>
+
+    <input type="color" id="colorPicker" value="#ff2d2d" onchange="changeTheme()">
+
+    <button id="rotateBtn" onclick="toggleRotate()">▶</button>
+  </div>
+
+</div>
+
+<div id="grid" class="grid grid-9"></div>
+
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
 
@@ -9,7 +180,6 @@ let rotating = false;
 
 let activeAudio = 0;
 let metaCache = {};
-
 let dragFrom = null;
 
 function save(){
@@ -60,14 +230,11 @@ async function getMeta(id){
   }
 }
 
-/* 🔥 DRAG + OPTIMIZED RENDER */
 async function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML="";
 
   if(videos.length === 0) return;
-
-  let batch = [];
 
   for(let i=0;i<visibleCount;i++){
     let index=(startIndex+i)%videos.length;
@@ -75,26 +242,19 @@ async function render(){
 
     let card=document.createElement("div");
     card.className="card";
-    card.draggable = true;
-    card.dataset.index = index;
+    card.draggable=true;
 
     if(index===activeAudio) card.classList.add("active");
 
-    /* 🎯 DRAG EVENTS */
-    card.ondragstart = () => {
-      dragFrom = index;
-    };
-
-    card.ondragover = (e) => e.preventDefault();
-
-    card.ondrop = () => {
-      let temp = videos[dragFrom];
-      videos[dragFrom] = videos[index];
-      videos[index] = temp;
-
+    card.ondragstart=()=>dragFrom=index;
+    card.ondrop=()=>{
+      let temp=videos[dragFrom];
+      videos[dragFrom]=videos[index];
+      videos[index]=temp;
       save();
       render();
     };
+    card.ondragover=e=>e.preventDefault();
 
     let iframe=document.createElement("iframe");
     iframe.loading="lazy";
@@ -124,34 +284,13 @@ async function render(){
     card.appendChild(close);
     card.appendChild(iframe);
     card.appendChild(info);
-
-    batch.push(card);
+    grid.appendChild(card);
   }
-
-  batch.forEach((card,i)=>{
-    setTimeout(()=>{
-      grid.appendChild(card);
-    }, i * 80);
-  });
-}
-
-/* PRELOAD */
-function preloadNext(){
-  let link = document.createElement("link");
-  link.rel="preconnect";
-  link.href="https://www.youtube.com";
-  document.head.appendChild(link);
 }
 
 function next(){
-  preloadNext();
   startIndex=(startIndex+visibleCount)%videos.length;
   render();
-}
-
-function changeTheme(){
-  let color = colorPicker.value;
-  document.documentElement.style.setProperty("--theme", color);
 }
 
 function updateTimer(){
@@ -174,5 +313,12 @@ function toggleRotate(){
   }
 }
 
+function changeTheme(){
+  document.documentElement.style.setProperty("--theme", colorPicker.value);
+}
+
 render();
 </script>
+
+</body>
+</html>
