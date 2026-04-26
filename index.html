@@ -4,13 +4,10 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
-<!-- OLD ENGLISH FONT -->
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --red:#ff0000;
-}
+:root{ --theme:#ff0000; }
 
 *{box-sizing:border-box;}
 
@@ -19,10 +16,9 @@ body{
   font-family:Segoe UI, sans-serif;
   color:white;
 
-  /* 🔥 BACKGROUND ILLUMINATION */
   background:
-    radial-gradient(circle at top, rgba(255,0,0,0.15), transparent 60%),
-    radial-gradient(circle at bottom, rgba(255,0,0,0.1), transparent 60%),
+    radial-gradient(circle at top, var(--theme)22, transparent 60%),
+    radial-gradient(circle at bottom, var(--theme)11, transparent 60%),
     #000;
 }
 
@@ -43,58 +39,50 @@ body{
   align-items:center;
 }
 
-/* 🏰 AGGRESSIVE TITLE */
+/* TITLE */
 .title{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-
-  font-size:90px;
+  font-size:85px;
   font-family:'UnifrakturMaguntia', cursive;
-
-  color:#ff0000;
-  letter-spacing:5px;
+  color:var(--theme);
+  letter-spacing:4px;
 
   text-shadow:
-    0 0 5px #ff0000,
-    0 0 20px #ff0000,
-    0 0 40px rgba(255,0,0,0.9),
-    0 0 80px rgba(255,0,0,0.6);
+    0 0 8px var(--theme),
+    0 0 20px var(--theme),
+    0 0 40px var(--theme),
+    0 0 80px var(--theme);
 }
 
 /* INPUT */
 input{
   padding:10px;
   border-radius:8px;
-  border:2px solid var(--red);
+  border:2px solid var(--theme);
   background:#111;
   color:white;
 }
 
-/* 🔴 BUTTONS */
+/* BUTTONS */
 button, select{
   padding:10px 16px;
   border-radius:8px;
-
   background:#111;
   color:white;
-
-  border:2px solid var(--red);
-
+  border:2px solid var(--theme);
   cursor:pointer;
   transition:0.2s;
 }
 
-/* GLOW ON HOVER */
 button:hover, select:hover{
-  box-shadow:
-    0 0 8px var(--red),
-    0 0 16px rgba(255,0,0,0.7);
+  box-shadow:0 0 10px var(--theme);
   background:#1a1a1a;
 }
 
 #rotateBtn.active{
-  background:var(--red);
+  background:var(--theme);
   color:black;
 }
 
@@ -102,8 +90,8 @@ button:hover, select:hover{
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  padding:10px;
+  gap:12px;
+  padding:12px;
   height:calc(100vh - 80px);
 }
 
@@ -113,10 +101,18 @@ button:hover, select:hover{
   border-radius:10px;
   overflow:hidden;
   border:1px solid rgba(255,255,255,0.1);
+  transition:0.2s;
 }
 
 .card:hover{
-  box-shadow:0 0 12px var(--red);
+  border-color:var(--theme);
+  box-shadow:0 0 12px var(--theme);
+}
+
+.card.active{
+  box-shadow:
+    0 0 10px var(--theme),
+    0 0 25px var(--theme);
 }
 
 /* VIDEO */
@@ -142,7 +138,7 @@ iframe{
   top:4px;
   right:4px;
   background:black;
-  border:1px solid var(--red);
+  border:1px solid var(--theme);
   color:white;
   padding:2px 6px;
   cursor:pointer;
@@ -162,11 +158,23 @@ iframe{
   <div class="title">Poot Tube</div>
 
   <div class="right">
+
+    <!-- GRID SIZE -->
+    <select onchange="changeGrid(this.value)">
+      <option value="3">3</option>
+      <option value="6">6</option>
+      <option value="9" selected>9</option>
+    </select>
+
+    <!-- TIMER -->
     <select id="timerSelect" onchange="updateTimer()">
       <option value="120000">120s</option>
       <option value="180000">180s</option>
       <option value="240000">240s</option>
     </select>
+
+    <!-- COLOR -->
+    <input type="color" id="colorPicker" value="#ff0000" onchange="changeTheme()">
 
     <button id="rotateBtn" onclick="toggleRotate()">▶</button>
   </div>
@@ -188,10 +196,24 @@ let activeAudio = 0;
 let dragFrom = null;
 let metaCache = {};
 
+/* SAVE */
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
 }
 
+/* GRID SIZE CHANGE */
+function changeGrid(val){
+  visibleCount = parseInt(val);
+  render();
+}
+
+/* COLOR CHANGE */
+function changeTheme(){
+  const color = document.getElementById("colorPicker").value;
+  document.documentElement.style.setProperty("--theme", color);
+}
+
+/* EXTRACT */
 function extractId(input){
   if(input.includes("watch?v=")){
     return input.split("v=")[1].split("&")[0];
@@ -202,40 +224,29 @@ function extractId(input){
   return input;
 }
 
+/* ADD */
 function add(){
   let val = document.getElementById("input").value.trim();
   if(!val) return;
 
   let id = extractId(val);
-  if(id.length !== 11) return alert("Invalid video");
+  if(id.length !== 11) return;
 
   if(videos.includes(id)) return;
 
   videos.push(id);
   save();
   render();
-  document.getElementById("input").value="";
 }
 
+/* REMOVE */
 function remove(index){
   videos.splice(index,1);
   save();
   render();
 }
 
-async function getMeta(id){
-  if(metaCache[id]) return metaCache[id];
-
-  try{
-    let res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
-    let data = await res.json();
-    metaCache[id] = data;
-    return data;
-  }catch{
-    return {title:id, author_name:"Unknown"};
-  }
-}
-
+/* RENDER */
 async function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML="";
@@ -248,52 +259,26 @@ async function render(){
 
     let card=document.createElement("div");
     card.className="card";
-    card.draggable=true;
 
     if(index===activeAudio) card.classList.add("active");
 
-    card.ondragstart=()=>dragFrom=index;
-
-    card.ondrop=()=>{
-      let temp=videos[dragFrom];
-      videos[dragFrom]=videos[index];
-      videos[index]=temp;
-      save();
-      render();
-    };
-
-    card.ondragover=e=>e.preventDefault();
-
     let iframe=document.createElement("iframe");
-    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}&playsinline=1`;
+    iframe.src=`https://www.youtube.com/embed/${id}?autoplay=1&mute=${index===activeAudio?0:1}&loop=1&playlist=${id}`;
     iframe.allow="autoplay";
-
-    let info=document.createElement("div");
-    info.className="info";
-
-    getMeta(id).then(meta=>{
-      info.innerText = meta.title + " • " + meta.author_name;
-    });
 
     let close=document.createElement("button");
     close.className="close";
     close.innerText="✖";
+    close.onclick=(e)=>{e.stopPropagation(); remove(index);};
 
-    close.onclick=(e)=>{
-      e.stopPropagation();
-      remove(index);
-    };
+    card.onclick=()=>{activeAudio=index; render();};
 
-    card.onclick=()=>{
-      activeAudio=index;
-      render();
-    };
-
-    card.append(close,iframe,info);
+    card.append(close,iframe);
     grid.appendChild(card);
   }
 }
 
+/* ROTATION */
 function next(){
   startIndex=(startIndex+visibleCount)%videos.length;
   render();
