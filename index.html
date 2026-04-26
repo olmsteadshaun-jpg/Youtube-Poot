@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>PootTubeLive</title>
 
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon.png">
 
 <style>
 :root{
@@ -15,7 +15,7 @@
 
 body{
   margin:0;
-  font-family:Inter, Segoe UI, sans-serif;
+  font-family:Segoe UI, sans-serif;
   background: radial-gradient(circle at top, #0a0a0a, #000);
   color:white;
 }
@@ -30,28 +30,35 @@ body{
   padding:16px 24px;
   backdrop-filter: blur(12px);
   background:rgba(0,0,0,0.6);
-  border-bottom:1px solid rgba(255,255,255,0.05);
 }
 
+/* LEFT / RIGHT */
 .left,.right{
   display:flex;
   gap:10px;
   align-items:center;
 }
 
-/* TITLE */
-.title{
+/* LOGO */
+.logoWrap{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  font-size:40px;
-  font-weight:900;
-  letter-spacing:3px;
-  color:var(--theme);
-  text-shadow:
-    0 0 10px var(--theme),
-    0 0 25px var(--theme),
-    0 0 50px rgba(255,0,0,0.4);
+}
+
+.logo{
+  height:60px;
+  object-fit:contain;
+
+  filter:
+    drop-shadow(0 0 10px #ff2d2d)
+    drop-shadow(0 0 25px #ff0000);
+
+  transition:0.3s;
+}
+
+.logo:hover{
+  transform:scale(1.05);
 }
 
 /* INPUT */
@@ -151,7 +158,9 @@ iframe{
     <button onclick="add()">Add</button>
   </div>
 
-  <div class="title">PootTubeLive</div>
+  <div class="logoWrap">
+    <img src="logo.png" class="logo">
+  </div>
 
   <div class="right">
     <select id="timerSelect" onchange="updateTimer()">
