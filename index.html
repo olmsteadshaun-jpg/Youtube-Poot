@@ -34,20 +34,33 @@ button{
 
 .grid{
   display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap:10px;
   padding:10px;
 }
 
 .player{
-  background:black;
+  background:#111827;
   position:relative;
+  border-radius:6px;
+  overflow:hidden;
+}
+
+.active{
+  outline:2px solid #22c55e;
 }
 
 iframe{
   width:100%;
-  height:200px;
+  height:180px;
   border:none;
+}
+
+.thumb{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  cursor:pointer;
 }
 
 .controls{
@@ -70,31 +83,29 @@ iframe{
 <div class="top">
   <input id="input" placeholder="Paste YouTube link or ID">
   <button onclick="add()">Add</button>
-  <button onclick="rotate()">Rotate ▶</button>
+  <button onclick="toggleRotate()">Rotate ▶</button>
 </div>
 
 <div id="grid" class="grid"></div>
 
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
+let current = 0;
+let rotating = false;
+let interval = null;
 
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
 }
 
 function extractId(input){
-  let id = input;
-
   if(input.includes("watch?v=")){
-    id = input.split("v=")[1];
-    if(id.includes("&")) id = id.split("&")[0];
+    return input.split("v=")[1].split("&")[0];
   }
-
   if(input.includes("youtu.be/")){
-    id = input.split("youtu.be/")[1];
+    return input.split("youtu.be/")[1];
   }
-
-  return id;
+  return input;
 }
 
 function add(){
@@ -102,8 +113,11 @@ function add(){
   if(!val) return;
 
   let id = extractId(val);
-  videos.push({ id, muted:true });
 
+  // prevent duplicates
+  if(videos.some(v => v.id === id)) return;
+
+  videos.push({ id, muted:true });
   save();
   render();
 
@@ -121,37 +135,49 @@ function toggleMute(index){
   render();
 }
 
+function play(index){
+  current = index;
+  render();
+}
+
 function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML = "";
 
   videos.forEach((v,i)=>{
     let div = document.createElement("div");
-    div.className = "player";
+    div.className = "player " + (i === current ? "active" : "");
+
+    let content = i === current
+      ? `<iframe src="https://www.youtube.com/embed/${v.id}?autoplay=1&mute=${v.muted ? 1 : 0}"></iframe>`
+      : `<img class="thumb" src="https://img.youtube.com/vi/${v.id}/hqdefault.jpg" onclick="play(${i})">`;
 
     div.innerHTML = `
       <div class="controls">
-        <button class="small" onclick="toggleMute(${i})">
-          ${v.muted ? "🔇" : "🔊"}
-        </button>
+        <button class="small" onclick="toggleMute(${i})">${v.muted ? "🔇" : "🔊"}</button>
         <button class="small" onclick="remove(${i})">❌</button>
       </div>
-
-      <iframe
-        src="https://www.youtube.com/embed/${v.id}?autoplay=1&mute=${v.muted ? 1 : 0}"
-        allow="autoplay">
-      </iframe>
+      ${content}
     `;
 
     grid.appendChild(div);
   });
 }
 
-// auto rotate (rebuild players every 60 sec)
-function rotate(){
-  setInterval(()=>{
-    render();
-  }, 60000);
+function next(){
+  if(videos.length === 0) return;
+  current = (current + 1) % videos.length;
+  render();
+}
+
+function toggleRotate(){
+  rotating = !rotating;
+
+  if(rotating){
+    interval = setInterval(next, 30000); // every 30 sec
+  } else {
+    clearInterval(interval);
+  }
 }
 
 render();
