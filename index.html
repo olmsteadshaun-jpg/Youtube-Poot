@@ -84,13 +84,14 @@ button, select{
   border-radius:10px;
   overflow:hidden;
   cursor:pointer;
-  border:2px solid #ff2d2d;
-  transition:0.2s;
+  border:2px solid var(--borderColor, #ff2d2d);
+  animation:borderGlow 3s infinite linear;
 }
 
-.card:hover{
-  transform:scale(1.02);
-  box-shadow:0 0 20px #ff2d2d;
+@keyframes borderGlow{
+  0%{box-shadow:0 0 5px var(--borderColor);}
+  50%{box-shadow:0 0 20px var(--borderColor);}
+  100%{box-shadow:0 0 5px var(--borderColor);}
 }
 
 /* THUMB */
@@ -135,13 +136,16 @@ iframe{
 
 <div class="top">
 
+  <!-- LEFT -->
   <div>
     <input id="input" placeholder="Paste video link or ID">
     <button onclick="add()">Add</button>
   </div>
 
+  <!-- CENTER TITLE -->
   <div class="title">POOT TUBE</div>
 
+  <!-- RIGHT -->
   <div>
     <select id="gridSize" onchange="changeGrid()">
       <option value="4">4</option>
@@ -154,6 +158,9 @@ iframe{
       <option value="180000">180s</option>
       <option value="240000">240s</option>
     </select>
+
+    <!-- 🎨 COLOR PICKER -->
+    <input type="color" id="colorPicker" value="#ff2d2d" onchange="changeColor()">
 
     <button id="rotateBtn" onclick="toggleRotate()">▶</button>
   </div>
@@ -170,6 +177,7 @@ let visibleCount = 4;
 let delay = 120000;
 let interval = null;
 let rotating = false;
+let borderColor = "#ff2d2d";
 
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
@@ -210,12 +218,15 @@ function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML="";
 
+  if(videos.length === 0) return;
+
   for(let i=0;i<visibleCount;i++){
     let index=(startIndex+i)%videos.length;
     let id=videos[index];
 
     let card=document.createElement("div");
     card.className="card";
+    card.style.setProperty("--borderColor", borderColor);
 
     let thumb=document.createElement("img");
     thumb.src=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
@@ -250,6 +261,11 @@ function render(){
 function changeGrid(){
   visibleCount=parseInt(gridSize.value);
   grid.className="grid grid-"+visibleCount;
+  render();
+}
+
+function changeColor(){
+  borderColor = document.getElementById("colorPicker").value;
   render();
 }
 
