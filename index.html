@@ -32,48 +32,37 @@ button{
   cursor:pointer;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap:10px;
+.container{
+  display:flex;
+  height:calc(100vh - 60px);
+}
+
+.sidebar{
+  width:260px;
+  background:#020617;
+  overflow-y:auto;
   padding:10px;
 }
 
-.player{
+.item{
   background:#111827;
-  position:relative;
-  border-radius:6px;
-  overflow:hidden;
+  padding:8px;
+  margin-bottom:5px;
+  cursor:pointer;
 }
 
 .active{
   outline:2px solid #22c55e;
 }
 
+.main{
+  flex:1;
+}
+
 iframe{
   width:100%;
-  height:180px;
+  height:100%;
   border:none;
-}
-
-.thumb{
-  width:100%;
-  height:180px;
-  object-fit:cover;
-  cursor:pointer;
-}
-
-.controls{
-  position:absolute;
-  top:5px;
-  right:5px;
-  display:flex;
-  gap:5px;
-}
-
-.small{
-  padding:4px;
-  font-size:12px;
 }
 </style>
 </head>
@@ -86,7 +75,12 @@ iframe{
   <button onclick="toggleRotate()">Rotate ▶</button>
 </div>
 
-<div id="grid" class="grid"></div>
+<div class="container">
+  <div id="list" class="sidebar"></div>
+  <div class="main">
+    <iframe id="player"></iframe>
+  </div>
+</div>
 
 <script>
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
@@ -114,10 +108,9 @@ function add(){
 
   let id = extractId(val);
 
-  // prevent duplicates
-  if(videos.some(v => v.id === id)) return;
+  if(videos.includes(id)) return;
 
-  videos.push({ id, muted:true });
+  videos.push(id);
   save();
   render();
 
@@ -130,43 +123,51 @@ function remove(index){
   render();
 }
 
-function toggleMute(index){
-  videos[index].muted = !videos[index].muted;
+function play(index){
+  current = index;
+  loadPlayer();
   render();
 }
 
-function play(index){
-  current = index;
-  render();
+function loadPlayer(){
+  if(videos.length === 0) return;
+
+  let id = videos[current];
+
+  document.getElementById("player").src =
+    "https://www.youtube.com/embed/" + id +
+    "?autoplay=1&mute=1&loop=1&playlist=" + id;
 }
 
 function render(){
-  let grid = document.getElementById("grid");
-  grid.innerHTML = "";
+  let list = document.getElementById("list");
+  list.innerHTML = "";
 
   videos.forEach((v,i)=>{
-    let div = document.createElement("div");
-    div.className = "player " + (i === current ? "active" : "");
+    let d = document.createElement("div");
+    d.className = "item " + (i === current ? "active" : "");
+    d.innerText = v;
 
-    let content = i === current
-      ? `<iframe src="https://www.youtube.com/embed/${v.id}?autoplay=1&mute=${v.muted ? 1 : 0}"></iframe>`
-      : `<img class="thumb" src="https://img.youtube.com/vi/${v.id}/hqdefault.jpg" onclick="play(${i})">`;
+    d.onclick = ()=>play(i);
 
-    div.innerHTML = `
-      <div class="controls">
-        <button class="small" onclick="toggleMute(${i})">${v.muted ? "🔇" : "🔊"}</button>
-        <button class="small" onclick="remove(${i})">❌</button>
-      </div>
-      ${content}
-    `;
+    let del = document.createElement("span");
+    del.innerText = " ❌";
+    del.style.float = "right";
+    del.onclick = (e)=>{
+      e.stopPropagation();
+      remove(i);
+    };
 
-    grid.appendChild(div);
+    d.appendChild(del);
+    list.appendChild(d);
   });
 }
 
 function next(){
   if(videos.length === 0) return;
+
   current = (current + 1) % videos.length;
+  loadPlayer();
   render();
 }
 
@@ -174,12 +175,16 @@ function toggleRotate(){
   rotating = !rotating;
 
   if(rotating){
-    interval = setInterval(next, 30000); // every 30 sec
+    interval = setInterval(next, 30000); // 30 sec
   } else {
     clearInterval(interval);
   }
 }
 
+// init
+if(videos.length > 0){
+  loadPlayer();
+}
 render();
 </script>
 
