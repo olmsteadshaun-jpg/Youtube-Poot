@@ -16,10 +16,8 @@ body{
   font-family:Segoe UI, sans-serif;
   color:white;
 
-  background:
-    radial-gradient(circle at top, var(--theme)22, transparent 60%),
-    radial-gradient(circle at bottom, var(--theme)11, transparent 60%),
-    #000;
+  /* 🖤 PURE BLACK BACKGROUND */
+  background:#000;
 }
 
 /* HEADER */
@@ -122,16 +120,6 @@ iframe{
   border:none;
 }
 
-/* INFO */
-.info{
-  position:absolute;
-  bottom:0;
-  width:100%;
-  padding:6px;
-  font-size:12px;
-  background:linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-}
-
 /* CLOSE */
 .close{
   position:absolute;
@@ -173,7 +161,7 @@ iframe{
       <option value="240000">240s</option>
     </select>
 
-    <!-- COLOR -->
+    <!-- COLOR PICKER -->
     <input type="color" id="colorPicker" value="#ff0000" onchange="changeTheme()">
 
     <button id="rotateBtn" onclick="toggleRotate()">▶</button>
@@ -193,21 +181,19 @@ let interval = null;
 let rotating = false;
 
 let activeAudio = 0;
-let dragFrom = null;
-let metaCache = {};
 
 /* SAVE */
 function save(){
   localStorage.setItem("videos", JSON.stringify(videos));
 }
 
-/* GRID SIZE CHANGE */
+/* GRID SIZE */
 function changeGrid(val){
   visibleCount = parseInt(val);
   render();
 }
 
-/* COLOR CHANGE */
+/* COLOR */
 function changeTheme(){
   const color = document.getElementById("colorPicker").value;
   document.documentElement.style.setProperty("--theme", color);
@@ -237,6 +223,8 @@ function add(){
   videos.push(id);
   save();
   render();
+
+  document.getElementById("input").value="";
 }
 
 /* REMOVE */
@@ -247,7 +235,7 @@ function remove(index){
 }
 
 /* RENDER */
-async function render(){
+function render(){
   let grid = document.getElementById("grid");
   grid.innerHTML="";
 
@@ -278,7 +266,7 @@ async function render(){
   }
 }
 
-/* ROTATION */
+/* ROTATE */
 function next(){
   startIndex=(startIndex+visibleCount)%videos.length;
   render();
